@@ -8,10 +8,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: mediaflow
-      POSTGRES_PASSWORD: mediaflow_secret
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
       POSTGRES_DB: mediaflow_db
     ports:
-      - "5433:5432"
+      - "5431:5432"
     volumes:
       - mediaflow_pgdata:/var/lib/postgresql/data
     healthcheck:

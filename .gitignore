@@ -9,6 +9,7 @@ node_modules/
 .env.*.local
 apps/*/.env
 apps/*/.env.local
+packages/database/generated/
 
 # Build output
 dist/

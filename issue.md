@@ -39,10 +39,10 @@ Siapkan database PostgreSQL (lokal via Docker) dan konvensi env var untuk semua 
 Buat package terpisah untuk schema Prisma agar bisa dipakai bersama oleh service lain di masa depan.
 
 **Acceptance Criteria:**
-- [ ] `schema.prisma` berisi model `User` dan `RefreshToken`
-- [ ] `bunx prisma migrate dev` berhasil generate migrasi awal
-- [ ] Export Prisma Client singleton (`export const prisma = new PrismaClient()`) dengan pola untuk cegah multiple instance saat hot-reload
-- [ ] Package `database` bisa di-import dari `apps/api` via workspace alias
+- [x] `schema.prisma` berisi model `User` dan `RefreshToken`
+- [x] `bunx prisma migrate dev` berhasil generate migrasi awal
+- [x] Export Prisma Client singleton (`export const prisma = new PrismaClient()`) dengan pola untuk cegah multiple instance saat hot-reload
+- [x] Package `database` bisa di-import dari `apps/api` via workspace alias
 
 ---
 
