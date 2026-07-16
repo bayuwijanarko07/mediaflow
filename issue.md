@@ -13,11 +13,11 @@ Dikelompokkan per epic, dengan urutan pengerjaan yang disarankan.
 Inisialisasi monorepo dengan Bun workspaces untuk `apps/*` dan `packages/*`.
 
 **Acceptance Criteria:**
-- [ ] Root `package.json` dengan `workspaces: ["apps/*", "packages/*"]`
-- [ ] `bunfig.toml` dikonfigurasi
-- [ ] Folder `apps/api`, `apps/web`, `packages/database`, `packages/shared-types` dibuat
-- [ ] `bun install` berhasil dari root tanpa error
-- [ ] `.gitignore` mencakup `node_modules`, `.env`, `dist`, `.turbo` (jika dipakai nanti)
+- [x] Root `package.json` dengan `workspaces: ["apps/*", "packages/*"]`
+- [x] `bunfig.toml` dikonfigurasi
+- [x] Folder `apps/api`, `apps/web`, `packages/database`, `packages/shared-types` dibuat
+- [x] `bun install` berhasil dari root tanpa error
+- [x] `.gitignore` mencakup `node_modules`, `.env`, `dist`, `.turbo` (jika dipakai nanti)
 
 ---
 
@@ -27,9 +27,9 @@ Inisialisasi monorepo dengan Bun workspaces untuk `apps/*` dan `packages/*`.
 Siapkan database PostgreSQL (lokal via Docker) dan konvensi env var untuk semua service.
 
 **Acceptance Criteria:**
-- [ ] `docker-compose.yml` dengan service `postgres`
-- [ ] `.env.example` di root dan tiap app (`DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CORS_ORIGIN`)
-- [ ] Koneksi dari `apps/api` ke Postgres berhasil di-test manual
+- [x] `docker-compose.yml` dengan service `postgres`
+- [x] `.env.example` di root dan tiap app (`DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CORS_ORIGIN`)
+- [x] Koneksi dari `apps/api` ke Postgres berhasil di-test manual
 
 ---
 

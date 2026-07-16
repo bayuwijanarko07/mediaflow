@@ -8,6 +8,10 @@
   },
   "dependencies": {
     "@mediaflow/database": "workspace:*",
-    "@mediaflow/shared-types": "workspace:*"
+    "@mediaflow/shared-types": "workspace:*",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.0"
   }
 }

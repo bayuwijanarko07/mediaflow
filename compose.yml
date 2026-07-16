@@ -1,0 +1,24 @@
+# compose.yml
+version: "3.9"
+
+services:
+  postgres:
+    image: docker.io/postgres:16-alpine
+    container_name: mediaflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mediaflow
+      POSTGRES_PASSWORD: mediaflow_secret
+      POSTGRES_DB: mediaflow_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - mediaflow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mediaflow -d mediaflow_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mediaflow_pgdata:
