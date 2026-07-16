@@ -1,0 +1,41 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "mediaflow",
+    },
+    "apps/api": {
+      "name": "@mediaflow/api",
+      "version": "1.0.0",
+      "dependencies": {
+        "@mediaflow/database": "workspace:*",
+        "@mediaflow/shared-types": "workspace:*",
+      },
+    },
+    "apps/web": {
+      "name": "@mediaflow/web",
+      "version": "1.0.0",
+      "dependencies": {
+        "@mediaflow/shared-types": "workspace:*",
+      },
+    },
+    "packages/database": {
+      "name": "@mediaflow/database",
+      "version": "1.0.0",
+    },
+    "packages/shared-types": {
+      "name": "@mediaflow/shared-types",
+      "version": "1.0.0",
+    },
+  },
+  "packages": {
+    "@mediaflow/api": ["@mediaflow/api@workspace:apps/api"],
+
+    "@mediaflow/database": ["@mediaflow/database@workspace:packages/database"],
+
+    "@mediaflow/shared-types": ["@mediaflow/shared-types@workspace:packages/shared-types"],
+
+    "@mediaflow/web": ["@mediaflow/web@workspace:apps/web"],
+  }
+}

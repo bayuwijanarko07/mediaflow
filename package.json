@@ -1,0 +1,15 @@
+{
+  "name": "mediaflow",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "bun run --cwd apps/api dev",
+    "dev:web": "bun run --cwd apps/web dev",
+    "db:generate": "bun run --cwd packages/database generate",
+    "db:migrate": "bun run --cwd packages/database migrate"
+  }
+}
