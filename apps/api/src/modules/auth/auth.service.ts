@@ -94,3 +94,52 @@ export async function createRefreshToken(userId: string) {
 export function getRefreshTokenMaxAgeSeconds() {
   return REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60;
 }
+
+export class InvalidRefreshTokenError extends Error {
+  constructor() {
+    super("Refresh token tidak valid atau sudah kedaluwarsa");
+    this.name = "InvalidRefreshTokenError";
+  }
+}
+
+export async function rotateRefreshToken(oldToken: string) {
+  const existingToken = await prisma.refreshToken.findUnique({
+    where: { token: oldToken },
+    include: { user: true },
+  });
+
+  // Validasi: token ada, belum revoked, belum expired
+  if (
+    !existingToken ||
+    existingToken.revoked ||
+    existingToken.expiresAt < new Date()
+  ) {
+    throw new InvalidRefreshTokenError();
+  }
+
+  // Revoke token lama (rotation) — dilakukan dalam transaction
+  // bersamaan dengan pembuatan token baru, supaya atomic
+  const newToken = crypto.randomUUID();
+  const expiresAt = new Date(
+    Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+  );
+
+  const [, createdToken] = await prisma.$transaction([
+    prisma.refreshToken.update({
+      where: { id: existingToken.id },
+      data: { revoked: true },
+    }),
+    prisma.refreshToken.create({
+      data: {
+        token: newToken,
+        userId: existingToken.userId,
+        expiresAt,
+      },
+    }),
+  ]);
+
+  return {
+    newRefreshToken: createdToken.token,
+    user: existingToken.user,
+  };
+}

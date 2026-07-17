@@ -92,11 +92,11 @@ Registrasi user baru dengan validasi email unik dan password policy.
 Login user, terbitkan access token (JWT, 15 menit) dan refresh token (cookie httpOnly, 7 hari).
 
 **Acceptance Criteria:**
-- [ ] Return 401 untuk email tidak ditemukan atau password salah (pesan generik, tidak bocorkan mana yang salah)
-- [ ] Refresh token disimpan di tabel `refresh_tokens` dengan `expiresAt`
-- [ ] Cookie refresh token: `httpOnly`, `secure`, `sameSite: strict`
-- [ ] Response body berisi `accessToken` + data user minimal
-- [ ] Test: login sukses, login gagal (email salah, password salah)
+- [x] Return 401 untuk email tidak ditemukan atau password salah (pesan generik, tidak bocorkan mana yang salah)
+- [x] Refresh token disimpan di tabel `refresh_tokens` dengan `expiresAt`
+- [x] Cookie refresh token: `httpOnly`, `secure`, `sameSite: strict`
+- [x] Response body berisi `accessToken` + data user minimal
+- [x] Test: login sukses, login gagal (email salah, password salah)
 
 ---
 

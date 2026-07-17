@@ -1,14 +1,17 @@
 import { Elysia } from "elysia";
 import { jwtPlugin } from "../../plugins/jwt.plugin";
 import { registerBodySchema, loginBodySchema } from "./auth.schema";
+import { REFRESH_TOKEN_COOKIE_NAME } from "./auth.constants";
 import {
-  registerUser,
-  findUserByEmail,
-  verifyPassword,
-  createRefreshToken,
-  getRefreshTokenMaxAgeSeconds,
-  EmailAlreadyExistsError,
-  InvalidCredentialsError,
+    registerUser,
+    findUserByEmail,
+    verifyPassword,
+    createRefreshToken,
+    rotateRefreshToken,
+    getRefreshTokenMaxAgeSeconds,
+    EmailAlreadyExistsError,
+    InvalidCredentialsError,
+    InvalidRefreshTokenError,
 } from "./auth.service";
 
 export const authController = new Elysia({ prefix: "/auth" })
@@ -74,4 +77,48 @@ export const authController = new Elysia({ prefix: "/auth" })
       };
     },
     { body: loginBodySchema }
-  );
+)
+    .post("/refresh", async ({ jwt, cookie, set }) => {
+    const refreshTokenCookie = cookie[REFRESH_TOKEN_COOKIE_NAME];
+    const oldToken = refreshTokenCookie.value;
+
+    if (!oldToken) {
+      set.status = 401;
+      return { message: "Refresh token tidak ditemukan" };
+    }
+
+    try {
+      const { newRefreshToken, user } = await rotateRefreshToken(oldToken);
+
+      const accessToken = await jwt.sign({ sub: user.id });
+
+      refreshTokenCookie.set({
+        value: newRefreshToken,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        maxAge: getRefreshTokenMaxAgeSeconds(),
+      });
+
+      return {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          isVerified: user.isVerified,
+        },
+      };
+    } catch (error) {
+      if (error instanceof InvalidRefreshTokenError) {
+        set.status = 401;
+        // Hapus cookie yang sudah tidak valid
+        refreshTokenCookie.remove();
+        return { message: error.message };
+      }
+
+      set.status = 500;
+      return { message: "Terjadi kesalahan pada server" };
+    }
+});
