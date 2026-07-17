@@ -144,9 +144,9 @@ Middleware yang memvalidasi access token JWT dari header `Authorization`.
 Ambil data profil user yang sedang login berdasarkan access token.
 
 **Acceptance Criteria:**
-- [ ] Route memakai middleware `requireAuth`
-- [ ] Return data user (tanpa passwordHash)
-- [ ] Return 401 jika tidak ada/invalid token
+- [x] Route memakai middleware `requireAuth`
+- [x] Return data user (tanpa passwordHash)
+- [x] Return 401 jika tidak ada/invalid token
 
 ---
 
@@ -156,9 +156,9 @@ Ambil data profil user yang sedang login berdasarkan access token.
 Cegah brute-force dengan pembatasan jumlah request per IP/email.
 
 **Acceptance Criteria:**
-- [ ] Limit request pada `/auth/login` dan `/auth/register` (mis. 5 request/menit per IP)
-- [ ] Return 429 saat limit terlampaui
-- [ ] Konfigurasi limit via env var
+- [x] Limit request pada `/auth/login` dan `/auth/register` (mis. 5 request/menit per IP)
+- [x] Return 429 saat limit terlampaui
+- [x] Konfigurasi limit via env var
 
 ---
 
@@ -168,8 +168,8 @@ Cegah brute-force dengan pembatasan jumlah request per IP/email.
 Revoke seluruh refresh token milik user (berguna saat curiga akun diretas).
 
 **Acceptance Criteria:**
-- [ ] Endpoint protected `POST /auth/logout-all`
-- [ ] Semua `refresh_tokens` milik `userId` di-set `revoked: true`
+- [x] Endpoint protected `POST /auth/logout-all`
+- [x] Semua `refresh_tokens` milik `userId` di-set `revoked: true`
 
 ---
 
@@ -181,8 +181,8 @@ Revoke seluruh refresh token milik user (berguna saat curiga akun diretas).
 Inisialisasi aplikasi Next dengan Vite, terhubung ke workspace root.
 
 **Acceptance Criteria:**
-- [ ] `bun run dev` menjalankan dev server tanpa error
-- [ ] Konfigurasi proxy/base URL API dari env (`VITE_API_URL`)
+- [x] `bun run dev` menjalankan dev server tanpa error
+- [x] Konfigurasi proxy/base URL API dari env (`VITE_API_URL`)
 
 ---
 
