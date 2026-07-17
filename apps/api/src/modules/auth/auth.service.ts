@@ -143,3 +143,15 @@ export async function rotateRefreshToken(oldToken: string) {
     user: existingToken.user,
   };
 }
+
+/**
+ * Revoke refresh token tertentu. Idempotent — dipanggil dengan token
+ * yang sudah tidak ada/sudah revoked pun tidak akan melempar error,
+ * karena tujuan akhirnya sama: pastikan token itu tidak valid lagi.
+ */
+export async function revokeRefreshToken(token: string) {
+  await prisma.refreshToken.updateMany({
+    where: { token },
+    data: { revoked: true },
+  });
+}

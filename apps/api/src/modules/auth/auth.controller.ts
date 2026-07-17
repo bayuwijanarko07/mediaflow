@@ -8,6 +8,7 @@ import {
     verifyPassword,
     createRefreshToken,
     rotateRefreshToken,
+    revokeRefreshToken,
     getRefreshTokenMaxAgeSeconds,
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -78,13 +79,15 @@ export const authController = new Elysia({ prefix: "/auth" })
     },
     { body: loginBodySchema }
 )
-    .post("/refresh", async ({ jwt, cookie, set }) => {
-    const refreshTokenCookie = cookie[REFRESH_TOKEN_COOKIE_NAME];
-    const oldToken = refreshTokenCookie.value;
+    .post(
+    "/refresh", 
+    async ({ jwt, cookie, set }) => {
+        const refreshTokenCookie = cookie[REFRESH_TOKEN_COOKIE_NAME];
+        const oldToken = refreshTokenCookie.value;
 
-    if (!oldToken) {
-      set.status = 401;
-      return { message: "Refresh token tidak ditemukan" };
+        if (!oldToken) {
+        set.status = 401;
+        return { message: "Refresh token tidak ditemukan" };
     }
 
     try {
@@ -121,4 +124,19 @@ export const authController = new Elysia({ prefix: "/auth" })
       set.status = 500;
       return { message: "Terjadi kesalahan pada server" };
     }
+})
+    .post(
+        "/logout", 
+        async ({ cookie, set }) => {
+        const refreshTokenCookie = cookie[REFRESH_TOKEN_COOKIE_NAME];
+        const token = refreshTokenCookie.value;
+
+        if (token) {
+        await revokeRefreshToken(token);
+        }
+
+        refreshTokenCookie.remove();
+
+        set.status = 200;
+        return { message: "Logout berhasil" };
 });

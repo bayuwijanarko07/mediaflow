@@ -106,11 +106,11 @@ Login user, terbitkan access token (JWT, 15 menit) dan refresh token (cookie htt
 Tukar refresh token valid (dari cookie) menjadi access token baru, dengan token rotation.
 
 **Acceptance Criteria:**
-- [ ] Baca refresh token dari cookie, validasi terhadap tabel `refresh_tokens` (belum revoked, belum expired)
-- [ ] Terbitkan access token baru
-- [ ] Rotasi: revoke refresh token lama, buat refresh token baru, update cookie
-- [ ] Return 401 jika refresh token invalid/expired/revoked
-- [ ] Test: refresh sukses, refresh dengan token expired, refresh dengan token yang sudah direvoke
+- [x] Baca refresh token dari cookie, validasi terhadap tabel `refresh_tokens` (belum revoked, belum expired)
+- [x] Terbitkan access token baru
+- [x] Rotasi: revoke refresh token lama, buat refresh token baru, update cookie
+- [x] Return 401 jika refresh token invalid/expired/revoked
+- [x] Test: refresh sukses, refresh dengan token expired, refresh dengan token yang sudah direvoke
 
 ---
 
