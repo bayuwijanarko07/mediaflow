@@ -132,9 +132,9 @@ Logout: revoke refresh token di database dan hapus cookie di client.
 Middleware yang memvalidasi access token JWT dari header `Authorization`.
 
 **Acceptance Criteria:**
-- [ ] Return 401 jika header tidak ada / format salah / token invalid / token expired
-- [ ] Inject `userId` ke context jika valid
-- [ ] Bisa dipasang sebagai `.use()` di route mana pun secara reusable
+- [x] Return 401 jika header tidak ada / format salah / token invalid / token expired
+- [x] Inject `userId` ke context jika valid
+- [x] Bisa dipasang sebagai `.use()` di route mana pun secara reusable
 
 ---
 

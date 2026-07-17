@@ -1,11 +1,13 @@
 import { Elysia } from "elysia";
 import { corsPlugin } from "./plugins/cors.plugin";
+import { errorHandlerPlugin } from "./plugins/error-handler.plugin";
 import { healthController } from "./modules/health/health.controller";
 import { authController } from "./modules/auth/auth.controller";
 
 const PORT = process.env.PORT ?? 4000;
 
 const app = new Elysia()
+  .use(errorHandlerPlugin)
   .use(corsPlugin)
   .use(healthController)
   .use(authController)
