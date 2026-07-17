@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
+    "@elysiajs/jwt": "^1.4.2",
     "@mediaflow/database": "workspace:*",
     "@mediaflow/shared-types": "workspace:*",
     "elysia": "^1.4.29",

@@ -13,3 +13,10 @@ export const registerBodySchema = t.Object({
 });
 
 export type RegisterBody = typeof registerBodySchema.static;
+
+export const loginBodySchema = t.Object({
+  email: t.String({ format: "email", error: "Format email tidak valid" }),
+  password: t.String({ minLength: 1, error: "Password wajib diisi" }),
+});
+
+export type LoginBody = typeof loginBodySchema.static;

@@ -67,8 +67,8 @@ Inisialisasi Elysia server dengan plugin dasar yang dibutuhkan seluruh route.
 Buat utilitas hash & verify password memakai `Bun.password` dengan algoritma argon2id.
 
 **Acceptance Criteria:**
-- [ ] Fungsi `hashPassword(password)` dan `verifyPassword(password, hash)`
-- [ ] Unit test: password ter-hash tidak sama dengan plaintext, verify berhasil untuk kombinasi benar & gagal untuk salah
+- [x] Fungsi `hashPassword(password)` dan `verifyPassword(password, hash)`
+- [x] Unit test: password ter-hash tidak sama dengan plaintext, verify berhasil untuk kombinasi benar & gagal untuk salah
 
 ---
 
@@ -78,11 +78,11 @@ Buat utilitas hash & verify password memakai `Bun.password` dengan algoritma arg
 Registrasi user baru dengan validasi email unik dan password policy.
 
 **Acceptance Criteria:**
-- [ ] Validasi body: email format valid, password minimal 8 karakter
-- [ ] Return 409 jika email sudah terdaftar
-- [ ] Password di-hash sebelum disimpan
-- [ ] Return 201 dengan data user (tanpa passwordHash) saat sukses
-- [ ] Test: register sukses, register email duplikat, register password lemah
+- [x] Validasi body: email format valid, password minimal 8 karakter
+- [x] Return 409 jika email sudah terdaftar
+- [x] Password di-hash sebelum disimpan
+- [x] Return 201 dengan data user (tanpa passwordHash) saat sukses
+- [x] Test: register sukses, register email duplikat, register password lemah
 
 ---
 

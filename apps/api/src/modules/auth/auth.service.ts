@@ -62,3 +62,35 @@ export async function registerUser(params: {
 
   return user;
 }
+
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super("Email atau password salah");
+    this.name = "InvalidCredentialsError";
+  }
+}
+
+const REFRESH_TOKEN_EXPIRY_DAYS = Number(
+  process.env.REFRESH_TOKEN_EXPIRY_DAYS ?? 7
+);
+
+export async function findUserByEmail(email: string) {
+  return prisma.user.findUnique({ where: { email } });
+}
+
+export async function createRefreshToken(userId: string) {
+  const token = crypto.randomUUID();
+  const expiresAt = new Date(
+    Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+  );
+
+  await prisma.refreshToken.create({
+    data: { token, userId, expiresAt },
+  });
+
+  return { token, expiresAt };
+}
+
+export function getRefreshTokenMaxAgeSeconds() {
+  return REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60;
+}
