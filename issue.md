@@ -120,9 +120,9 @@ Tukar refresh token valid (dari cookie) menjadi access token baru, dengan token 
 Logout: revoke refresh token di database dan hapus cookie di client.
 
 **Acceptance Criteria:**
-- [ ] Refresh token terkait di-set `revoked: true`
-- [ ] Cookie refresh token dihapus (`maxAge: 0` atau clear)
-- [ ] Return 200 meski token sudah tidak valid (idempotent)
+- [x] Refresh token terkait di-set `revoked: true`
+- [x] Cookie refresh token dihapus (`maxAge: 0` atau clear)
+- [x] Return 200 meski token sudah tidak valid (idempotent)
 
 ---
 
