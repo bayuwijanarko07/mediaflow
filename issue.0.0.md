@@ -79,7 +79,7 @@ Registrasi user baru dengan validasi email unik dan password policy.
 
 **Acceptance Criteria:**
 - [x] Validasi body: email format valid, password minimal 8 karakter
-- [x] Return 409 jika email sudah terdaftar
+- [x] Return 409 jika email sudah terdaftar   
 - [x] Password di-hash sebelum disimpan
 - [x] Return 201 dengan data user (tanpa passwordHash) saat sukses
 - [x] Test: register sukses, register email duplikat, register password lemah
@@ -192,9 +192,9 @@ Inisialisasi aplikasi Next dengan Vite, terhubung ke workspace root.
 Context global untuk menyimpan status login, accessToken (di memory, bukan localStorage), dan data user.
 
 **Acceptance Criteria:**
-- [ ] `AuthProvider` membungkus root app
-- [ ] State: `user`, `accessToken`, `isLoading`, `isAuthenticated`
-- [ ] Fungsi `login()`, `logout()`, `refreshSession()` tersedia via hook `useAuth()`
+- [x] `AuthProvider` membungkus root app
+- [x] State: `user`, `accessToken`, `isLoading`, `isAuthenticated`
+- [x] Fungsi `login()`, `logout()`, `refreshSession()` tersedia via hook `useAuth()`
 
 ---
 
