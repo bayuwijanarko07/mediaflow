@@ -54,10 +54,10 @@ Buat package terpisah untuk schema Prisma agar bisa dipakai bersama oleh service
 Inisialisasi Elysia server dengan plugin dasar yang dibutuhkan seluruh route.
 
 **Acceptance Criteria:**
-- [ ] `src/index.ts` menjalankan server Elysia di port dari env
-- [ ] Plugin `@elysiajs/cors` terpasang dengan `credentials: true` dan origin whitelist
-- [ ] Plugin `@elysiajs/cookie` terpasang
-- [ ] Endpoint health check `GET /health` mengembalikan 200
+- [x] `src/index.ts` menjalankan server Elysia di port dari env
+- [x] Plugin `@elysiajs/cors` terpasang dengan `credentials: true` dan origin whitelist
+- [x] Plugin `@elysiajs/cookie` terpasang
+- [x] Endpoint health check `GET /health` mengembalikan 200
 
 ---
 

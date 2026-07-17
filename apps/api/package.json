@@ -7,8 +7,10 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
+    "@elysiajs/cors": "^1.4.2",
     "@mediaflow/database": "workspace:*",
     "@mediaflow/shared-types": "workspace:*",
+    "elysia": "^1.4.29",
     "pg": "^8.22.0"
   },
   "devDependencies": {
