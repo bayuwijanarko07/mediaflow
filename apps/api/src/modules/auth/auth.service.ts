@@ -155,3 +155,24 @@ export async function revokeRefreshToken(token: string) {
     data: { revoked: true },
   });
 }
+
+export async function getUserById(userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      isVerified: true,
+      createdAt: true,
+      // passwordHash sengaja tidak di-select
+    },
+  });
+}
+
+export async function revokeAllUserRefreshTokens(userId: string) {
+  await prisma.refreshToken.updateMany({
+    where: { userId, revoked: false },
+    data: { revoked: true },
+  });
+}
