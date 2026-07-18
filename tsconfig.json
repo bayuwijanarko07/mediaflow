@@ -9,7 +9,8 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "types": ["node", "bun-types"]
   },
   "exclude": ["node_modules", "dist", ".next"]
 }

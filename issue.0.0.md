@@ -204,9 +204,9 @@ Context global untuk menyimpan status login, accessToken (di memory, bukan local
 Wrapper fetch yang otomatis memanggil `/auth/refresh` ketika access token expired, lalu retry request asli.
 
 **Acceptance Criteria:**
-- [ ] Semua request menyertakan `credentials: "include"`
-- [ ] Saat response 401, coba refresh sekali, lalu retry originalRequest
-- [ ] Jika refresh juga gagal → logout otomatis + redirect ke halaman login
+- [x] Semua request menyertakan `credentials: "include"`
+- [x] Saat response 401, coba refresh sekali, lalu retry originalRequest
+- [x] Jika refresh juga gagal → logout otomatis + redirect ke halaman login
 
 ---
 
@@ -216,9 +216,9 @@ Wrapper fetch yang otomatis memanggil `/auth/refresh` ketika access token expire
 Form registrasi dengan validasi client-side dan penanganan error dari API.
 
 **Acceptance Criteria:**
-- [ ] Validasi email & password (min 8 karakter) sebelum submit
-- [ ] Tampilkan pesan error dari API (mis. email sudah terdaftar)
-- [ ] Redirect ke login setelah sukses
+- [x] Validasi email & password (min 8 karakter) sebelum submit
+- [x] Tampilkan pesan error dari API (mis. email sudah terdaftar)
+- [x] Redirect ke login setelah sukses
 
 ---
 
@@ -228,9 +228,9 @@ Form registrasi dengan validasi client-side dan penanganan error dari API.
 Form login yang memanggil `AuthContext.login()`.
 
 **Acceptance Criteria:**
-- [ ] Validasi input dasar
-- [ ] Tampilkan error saat kredensial salah
-- [ ] Redirect ke dashboard/halaman utama setelah sukses
+- [x] Validasi input dasar
+- [x] Tampilkan error saat kredensial salah
+- [x] Redirect ke dashboard/halaman utama setelah sukses
 
 ---
 
@@ -240,9 +240,9 @@ Form login yang memanggil `AuthContext.login()`.
 Komponen/HOC yang redirect ke `/login` jika user belum terautentikasi.
 
 **Acceptance Criteria:**
-- [ ] Cek `isAuthenticated` dari `useAuth()`
-- [ ] Tampilkan loading state saat masih memverifikasi sesi (mis. saat refresh page)
-- [ ] Redirect ke `/login` jika tidak terautentikasi, simpan intended URL untuk redirect balik
+- [x] Cek `isAuthenticated` dari `useAuth()`
+- [x] Tampilkan loading state saat masih memverifikasi sesi (mis. saat refresh page)
+- [x] Redirect ke `/login` jika tidak terautentikasi, simpan intended URL untuk redirect balik
 
 ---
 

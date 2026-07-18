@@ -12,5 +12,8 @@
     "test:api": "bun run --cwd apps/api test",
     "db:generate": "bun run --cwd packages/database generate",
     "db:migrate": "bun run --cwd packages/database migrate"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14"
   }
 }
