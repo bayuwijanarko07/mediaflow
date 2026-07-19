@@ -13,6 +13,7 @@
     "@elysiajs/jwt": "^1.4.2",
     "@mediaflow/database": "workspace:*",
     "@mediaflow/shared-types": "workspace:*",
+    "@mediaflow/storage": "workspace:*",
     "elysia": "^1.4.29",
     "elysia-rate-limit": "^4.6.2",
     "pg": "^8.22.0"

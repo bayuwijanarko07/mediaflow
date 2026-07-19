@@ -16,7 +16,7 @@ export function LogoutButton({ className, children }: LogoutButtonProps) {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    try {
+    try {c
       await logout();
     } catch (error) {
 +     console.error("Logout API gagal:", error);

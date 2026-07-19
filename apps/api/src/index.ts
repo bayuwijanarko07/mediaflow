@@ -3,8 +3,12 @@ import { corsPlugin } from "./plugins/cors.plugin";
 import { errorHandlerPlugin } from "./plugins/error-handler.plugin";
 import { healthController } from "./modules/health/health.controller";
 import { authController } from "./modules/auth/auth.controller";
+import { ensureStorageDirs } from "@mediaflow/storage";
 
 const PORT = process.env.PORT ?? 4000;
+
+await ensureStorageDirs();
+console.log("✅ Folder storage siap");
 
 const app = new Elysia()
   .use(errorHandlerPlugin)

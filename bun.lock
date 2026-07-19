@@ -16,6 +16,7 @@
         "@elysiajs/jwt": "^1.4.2",
         "@mediaflow/database": "workspace:*",
         "@mediaflow/shared-types": "workspace:*",
+        "@mediaflow/storage": "workspace:*",
         "elysia": "^1.4.29",
         "elysia-rate-limit": "^4.6.2",
         "pg": "^8.22.0",
@@ -60,6 +61,10 @@
     },
     "packages/shared-types": {
       "name": "@mediaflow/shared-types",
+      "version": "1.0.0",
+    },
+    "packages/storage": {
+      "name": "@mediaflow/storage",
       "version": "1.0.0",
     },
   },
@@ -211,6 +216,8 @@
     "@mediaflow/database": ["@mediaflow/database@workspace:packages/database"],
 
     "@mediaflow/shared-types": ["@mediaflow/shared-types@workspace:packages/shared-types"],
+
+    "@mediaflow/storage": ["@mediaflow/storage@workspace:packages/storage"],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.6", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg=="],
 
