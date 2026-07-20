@@ -20,6 +20,7 @@ export default function HomePage() {
       <h1>Mediaflow</h1>
       {isAuthenticated ? (
         <>
+          <p>Role: {user?.role}</p>
           <p>Halo, {user?.name ?? user?.email}!</p>
           <LogoutButton />
         </>

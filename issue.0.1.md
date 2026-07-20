@@ -376,9 +376,9 @@ Untuk membedakan akses admin (upload, kelola video) vs user biasa (hanya nonton)
 Middleware tambahan (dibangun di atas `requireAuth` yang sudah ada) yang memvalidasi `role === "ADMIN"`.
 
 **Acceptance Criteria:**
-- [ ] Return 403 kalau user login tapi bukan admin
-- [ ] Return 401 kalau belum login sama sekali (delegasi ke `requireAuth`)
-- [ ] Test: akses dengan user biasa (403), admin (lolos), tanpa login (401)
+- [x] Return 403 kalau user login tapi bukan admin
+- [x] Return 401 kalau belum login sama sekali (delegasi ke `requireAuth`)
+- [x] Test: akses dengan user biasa (403), admin (lolos), tanpa login (401)
 
 ---
 

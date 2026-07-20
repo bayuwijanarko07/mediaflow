@@ -77,10 +77,11 @@ export const authController = new Elysia({ prefix: "/auth" })
             return {
                 accessToken,
                 user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                isVerified: user.isVerified,
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    isVerified: user.isVerified,
+                    role: user.role,
                 },
             };
         },
@@ -91,12 +92,12 @@ export const authController = new Elysia({ prefix: "/auth" })
     "/refresh", 
     async ({ jwt, cookie, set }) => {
         const refreshTokenCookie = cookie[REFRESH_TOKEN_COOKIE_NAME];
-        const oldToken = refreshTokenCookie.value;
+        const oldToken = refreshTokenCookie.value as string;
 
         if (!oldToken) {
-        set.status = 401;
-        return { message: "Refresh token tidak ditemukan" };
-    }
+            set.status = 401;
+            return { message: "Refresh token tidak ditemukan" };
+        }
 
     try {
       const { newRefreshToken, user } = await rotateRefreshToken(oldToken);
@@ -119,6 +120,7 @@ export const authController = new Elysia({ prefix: "/auth" })
           email: user.email,
           name: user.name,
           isVerified: user.isVerified,
+          role: user.role,
         },
       };
     } catch (error) {
@@ -137,7 +139,7 @@ export const authController = new Elysia({ prefix: "/auth" })
         "/logout", 
         async ({ cookie, set }) => {
         const refreshTokenCookie = cookie[REFRESH_TOKEN_COOKIE_NAME];
-        const token = refreshTokenCookie.value;
+        const token = refreshTokenCookie.value as string | undefined;
 
         if (token) {
             await revokeRefreshToken(token);

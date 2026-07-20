@@ -55,6 +55,7 @@ export async function registerUser(params: {
       email: true,
       name: true,
       isVerified: true,
+      role: true,
       createdAt: true,
       // passwordHash sengaja TIDAK di-select, tidak pernah keluar ke response
     },
@@ -164,6 +165,7 @@ export async function getUserById(userId: string) {
       email: true,
       name: true,
       isVerified: true,
+      role: true,
       createdAt: true,
       // passwordHash sengaja tidak di-select
     },

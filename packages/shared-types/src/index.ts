@@ -1,8 +1,11 @@
+export type UserRole = "USER" | "ADMIN";
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string | null;
   isVerified: boolean;
+  role: UserRole;
 }
 
 export interface LoginResponse {
