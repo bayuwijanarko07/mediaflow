@@ -3,7 +3,6 @@ import { redis } from "../../lib/redis";
 
 export const healthController = new Elysia().get("/health", async () => {
   let redisStatus = "unknown";
-
   try {
     await redis.ping();
     redisStatus = "connected";

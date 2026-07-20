@@ -11,6 +11,7 @@
   "dependencies": {
     "@mediaflow/database": "workspace:*",
     "@mediaflow/storage": "workspace:*",
-    "@mediaflow/shared-types": "workspace:*"
+    "@mediaflow/shared-types": "workspace:*",
+    "@mediaflow/queue": "workspace:*"
   }
 }

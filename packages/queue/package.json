@@ -1,0 +1,13 @@
+{
+  "name": "@mediaflow/queue",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@mediaflow/shared-types": "workspace:*",
+    "bullmq": "^5.80.0",
+    "ioredis": "^5.11.1"
+  }
+}

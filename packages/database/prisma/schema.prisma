@@ -18,6 +18,8 @@ model User {
   updatedAt    DateTime @updatedAt
 
   refreshTokens RefreshToken[]
+  videos        Video[]         // BARU — video yang di-upload user ini (kalau admin)
+  watchHistory  WatchHistory[]  // BARU — riwayat tontonan user ini
 
   @@map("users")
 }
@@ -33,4 +35,111 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+// =========================================
+// STREAMING MODULE
+// =========================================
+
+enum VideoStatus {
+  UPLOADING
+  UPLOADED
+  QUEUED
+  PROCESSING
+  READY
+  FAILED
+}
+
+model Video {
+  id                String      @id @default(uuid())
+  title             String
+  description       String?
+  status            VideoStatus @default(UPLOADING)
+  durationSec       Int?
+  thumbnailUrl      String?
+  masterPlaylistUrl String?
+  rawFileKey        String?
+  uploadedById      String
+  uploadedBy        User        @relation(fields: [uploadedById], references: [id])
+  viewCount         Int         @default(0)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  genres        VideoGenre[]
+  renditions    VideoRendition[]
+  transcodeJobs TranscodeJob[]
+  watchHistory  WatchHistory[]
+
+  @@index([status])
+  @@index([uploadedById])
+  @@map("videos")
+}
+
+model VideoRendition {
+  id          String   @id @default(uuid())
+  videoId     String
+  video       Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  resolution  String   // "1080p", "720p", "480p", "240p"
+  bitrateKbps Int
+  playlistUrl String
+  createdAt   DateTime @default(now())
+
+  @@index([videoId])
+  @@map("video_renditions")
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model TranscodeJob {
+  id           String    @id @default(uuid())
+  videoId      String
+  video        Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  status       JobStatus @default(PENDING)
+  progress     Int       @default(0)
+  errorMessage String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([videoId])
+  @@index([status])
+  @@map("transcode_jobs")
+}
+
+model Genre {
+  id     String       @id @default(uuid())
+  name   String       @unique
+  videos VideoGenre[]
+
+  @@map("genres")
+}
+
+model VideoGenre {
+  videoId String
+  genreId String
+  video   Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  genre   Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([videoId, genreId])
+  @@map("video_genres")
+}
+
+model WatchHistory {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId       String
+  video         Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  progressSec   Int      @default(0)
+  completed     Boolean  @default(false)
+  lastWatchedAt DateTime @updatedAt
+
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@map("watch_history")
 }

@@ -300,9 +300,9 @@ UI logout yang memanggil endpoint logout dan membersihkan state lokal.
 Tambahkan service Redis ke `compose.yml`, dan buat koneksi Redis client di `apps/api` untuk dipakai job queue nanti.
 
 **Acceptance Criteria:**
-- [ ] Service `redis` ditambahkan ke `compose.yml`, `podman compose up -d` berhasil
-- [ ] `apps/api` bisa konek ke Redis (test manual: set/get key sederhana)
-- [ ] `REDIS_URL` ditambahkan ke `.env.example` dan `.env`
+- [x] Service `redis` ditambahkan ke `compose.yml`, `podman compose up -d` berhasil
+- [x] `apps/api` bisa konek ke Redis (test manual: set/get key sederhana)
+- [x] `REDIS_URL` ditambahkan ke `.env.example` dan `.env`
 
 ---
 
@@ -312,9 +312,9 @@ Tambahkan service Redis ke `compose.yml`, dan buat koneksi Redis client di `apps
 Buat struktur folder di disk lokal untuk `uploads-temp/`, `raw-temp/`, `hls/` sesuai desain di PRD, dan buat helper module untuk baca/tulis/hapus file.
 
 **Acceptance Criteria:**
-- [ ] Folder `mediaflow-storage/{uploads-temp,raw-temp,hls}` dibuat, path dikonfigurasi via `STORAGE_ROOT` di `.env`
-- [ ] Helper `storage.ts` (`apps/api` dan `apps/worker`) untuk operasi file: simpan chunk, assemble, hapus, list
-- [ ] Unit test helper storage: simpan file, baca ulang, hapus, dan pastikan file benar-benar hilang dari disk
+- [x] Folder `mediaflow-storage/{uploads-temp,raw-temp,hls}` dibuat, path dikonfigurasi via `STORAGE_ROOT` di `.env`
+- [x] Helper `storage.ts` (`apps/api` dan `apps/worker`) untuk operasi file: simpan chunk, assemble, hapus, list
+- [x] Unit test helper storage: simpan file, baca ulang, hapus, dan pastikan file benar-benar hilang dari disk
 
 ---
 
@@ -324,10 +324,10 @@ Buat struktur folder di disk lokal untuk `uploads-temp/`, `raw-temp/`, `hls/` se
 Buat aplikasi baru `apps/worker` (Bun process) yang nantinya konsumsi job dari Redis queue, terpisah dari `apps/api`.
 
 **Acceptance Criteria:**
-- [ ] `apps/worker/package.json` dibuat, terdaftar sebagai workspace member
-- [ ] `apps/worker/src/index.ts` bisa dijalankan (`bun run dev:worker`) tanpa error, minimal print "Worker started"
-- [ ] Worker bisa import `@mediaflow/database` (Prisma) via workspace alias
-- [ ] Script `dev:worker` ditambahkan di root `package.json`
+- [x] `apps/worker/package.json` dibuat, terdaftar sebagai workspace member
+- [x] `apps/worker/src/index.ts` bisa dijalankan (`bun run dev:worker`) tanpa error, minimal print "Worker started"
+- [x] Worker bisa import `@mediaflow/database` (Prisma) via workspace alias
+- [x] Script `dev:worker` ditambahkan di root `package.json`
 
 ---
 
@@ -337,9 +337,9 @@ Buat aplikasi baru `apps/worker` (Bun process) yang nantinya konsumsi job dari R
 Setup BullMQ sebagai job queue library di atas Redis, dipakai bersama oleh `apps/api` (produce job) dan `apps/worker` (consume job).
 
 **Acceptance Criteria:**
-- [ ] Package `bullmq` terinstall di `apps/api` dan `apps/worker`
-- [ ] Definisi queue `transcode-queue` dibuat di lokasi shared (bisa di `packages/shared-types` atau package baru `packages/queue`)
-- [ ] Test manual: `apps/api` push job dummy, `apps/worker` berhasil menerima & log job tersebut
+- [x] Package `bullmq` terinstall di `apps/api` dan `apps/worker`
+- [x] Definisi queue `transcode-queue` dibuat di lokasi shared (bisa di `packages/shared-types` atau package baru `packages/queue`)
+- [x] Test manual: `apps/api` push job dummy, `apps/worker` berhasil menerima & log job tersebut
 
 ---
 
