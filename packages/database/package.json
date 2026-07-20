@@ -9,7 +9,9 @@
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "seed": "bun run prisma/seed.ts",
+    "test": "bun test"
   },
   "dependencies": {
     "@prisma/client": "^5.16.0"

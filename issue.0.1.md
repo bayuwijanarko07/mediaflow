@@ -351,10 +351,10 @@ Setup BullMQ sebagai job queue library di atas Redis, dipakai bersama oleh `apps
 Extend `schema.prisma` di `packages/database` dengan seluruh model yang dibutuhkan modul streaming, sesuai PRD.
 
 **Acceptance Criteria:**
-- [ ] Semua model (`Video`, `VideoRendition`, `TranscodeJob`, `Genre`, `VideoGenre`, `WatchHistory`) + enum (`VideoStatus`, `JobStatus`) ditambahkan
-- [ ] Relasi ke `User` (existing) ditambahkan: `videos`, `watchHistory`
-- [ ] `bunx prisma migrate dev --name add_streaming_models` berhasil tanpa error
-- [ ] Tabel baru terverifikasi ada di Postgres (`\dt`)
+- [x] Semua model (`Video`, `VideoRendition`, `TranscodeJob`, `Genre`, `VideoGenre`, `WatchHistory`) + enum (`VideoStatus`, `JobStatus`) ditambahkan
+- [x] Relasi ke `User` (existing) ditambahkan: `videos`, `watchHistory`
+- [x] `bunx prisma migrate dev --name add_streaming_models` berhasil tanpa error
+- [x] Tabel baru terverifikasi ada di Postgres (`\dt`)
 
 ---
 
@@ -364,9 +364,9 @@ Extend `schema.prisma` di `packages/database` dengan seluruh model yang dibutuhk
 Untuk membedakan akses admin (upload, kelola video) vs user biasa (hanya nonton), tambahkan role-based access ke model `User`.
 
 **Acceptance Criteria:**
-- [ ] Enum `Role { USER, ADMIN }` ditambahkan, field `role` di model `User` dengan default `USER`
-- [ ] Migrasi berhasil dijalankan
-- [ ] Minimal 1 user existing di-set manual jadi `ADMIN` (lewat Prisma Studio atau seed script) untuk testing
+- [x] Enum `Role { USER, ADMIN }` ditambahkan, field `role` di model `User` dengan default `USER`
+- [x] Migrasi berhasil dijalankan
+- [x] Minimal 1 user existing di-set manual jadi `ADMIN` (lewat Prisma Studio atau seed script) untuk testing
 
 ---
 
