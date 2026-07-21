@@ -1,5 +1,6 @@
 import { redis } from "../../lib/redis";
-import { getStoragePath, saveFile } from "@mediaflow/storage";
+import { getStoragePath, saveFile, readFile, deleteDirectory, deleteFile } from "@mediaflow/storage";
+import { extname } from "node:path"
 
 import {
   CHUNK_SIZE_BYTES,
@@ -171,4 +172,74 @@ export async function getUploadStatus(uploadId: string): Promise<{
     receivedChunks: session.receivedChunks,
     isComplete: session.receivedChunks.length === session.totalChunks,
   };
+}
+
+export class IncompleteUploadError extends Error {
+  constructor(received: number, total: number) {
+    super(`Upload belum lengkap: ${received}/${total} chunk diterima`);
+    this.name = "IncompleteUploadError";
+  }
+}
+
+/**
+ * Gabungkan seluruh chunk (berurutan sesuai index) jadi 1 file utuh,
+ * simpan ke raw-temp/, lalu hapus folder chunk sementara karena
+ * sudah tidak dibutuhkan lagi setelah assembly sukses.
+ */
+export async function assembleChunks(params: {
+  uploadId: string;
+  fileName: string;
+}): Promise<{ rawFilePath: string }> {
+  const session = await getUploadSession(params.uploadId);
+
+  if (!session) {
+    throw new UploadSessionNotFoundError();
+  }
+
+  if (session.receivedChunks.length !== session.totalChunks) {
+    throw new IncompleteUploadError(
+      session.receivedChunks.length,
+      session.totalChunks
+    );
+  }
+
+  const extension = extname(params.fileName) || ".mp4";
+  const rawFilePath = getStoragePath(
+    "raw-temp",
+    `${params.uploadId}${extension}`
+  );
+
+  // Gabungkan chunk berurutan (index 0, 1, 2, ...) jadi satu file utuh.
+  // Dibaca satu per satu (bukan load semua ke memory sekaligus) supaya
+  // aman untuk file besar (>1GB) tanpa membebani RAM.
+  const chunkBuffers: Uint8Array[] = [];
+  for (let i = 0; i < session.totalChunks; i++) {
+    const chunkPath = getStoragePath("uploads-temp", params.uploadId, `chunk-${i}`);
+    const chunkFile = readFile(chunkPath);
+    const chunkArrayBuffer = await chunkFile.arrayBuffer();
+    chunkBuffers.push(new Uint8Array(chunkArrayBuffer));
+  }
+
+  const totalSize = chunkBuffers.reduce((sum, buf) => sum + buf.length, 0);
+  const combined = new Uint8Array(totalSize);
+  let offset = 0;
+  for (const buf of chunkBuffers) {
+    combined.set(buf, offset);
+    offset += buf.length;
+  }
+
+  await saveFile(rawFilePath, combined);
+
+  // Hapus folder chunk sementara — sudah tidak dibutuhkan setelah assembly
+  await deleteDirectory(getStoragePath("uploads-temp", params.uploadId));
+
+  return { rawFilePath };
+}
+
+/**
+ * Hapus sesi upload dari Redis setelah proses complete selesai
+ * (baik sukses maupun kalau perlu dibatalkan).
+ */
+export async function deleteUploadSession(uploadId: string): Promise<void> {
+  await redis.del(`${UPLOAD_SESSION_REDIS_PREFIX}${uploadId}`);
 }

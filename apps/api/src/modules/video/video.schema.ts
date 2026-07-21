@@ -16,4 +16,8 @@ export const uploadStatusParamsSchema = t.Object({
   uploadId: t.String(),
 });
 
+export const completeUploadParamsSchema = t.Object({
+  uploadId: t.String(),
+});
+
 export type InitUploadBody = typeof initUploadBodySchema.static;

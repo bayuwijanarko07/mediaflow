@@ -4,15 +4,21 @@ import {
   initUploadBodySchema,
   chunkParamsSchema,
   uploadStatusParamsSchema,
+  completeUploadParamsSchema,
 } from "./video.schema";
 import {
   initUploadSession,
   receiveChunk,
   getUploadStatus,
+  assembleChunks,
+  deleteUploadSession,
+  getUploadSession,
   FileTooLargeError,
   UploadSessionNotFoundError,
   InvalidChunkIndexError,
+  IncompleteUploadError,
 } from "./upload.service";
+import { createVideoRecord, queueTranscoding } from "./video.service";
 
 export const videoController = new Elysia({ prefix: "/videos" })
     .use(requireAdmin)
@@ -98,4 +104,60 @@ export const videoController = new Elysia({ prefix: "/videos" })
       }
     },
     { params: uploadStatusParamsSchema }
+    )
+    .post(
+    "/upload/:uploadId/complete",
+    async ({ params, adminUser, set }) => {
+      try {
+        const session = await getUploadSession(params.uploadId);
+
+        if (!session) {
+          set.status = 404;
+          return { message: "Sesi upload tidak ditemukan atau sudah kedaluwarsa" };
+        }
+
+        // 1. Gabungkan seluruh chunk jadi 1 file utuh
+        const { rawFilePath } = await assembleChunks({
+          uploadId: params.uploadId,
+          fileName: session.fileName,
+        });
+
+        // 2. Buat record Video di database (status UPLOADED)
+        const video = await createVideoRecord({
+          title: session.title,
+          description: session.description,
+          uploadedById: adminUser.id,
+          rawFileKey: rawFilePath,
+        });
+
+        // 3. Push job transcoding ke BullMQ (status jadi QUEUED)
+        await queueTranscoding({
+          videoId: video.id,
+          rawFilePath,
+        });
+
+        // 4. Bersihkan sesi upload dari Redis, sudah tidak dibutuhkan
+        await deleteUploadSession(params.uploadId);
+
+        set.status = 201;
+        return {
+          message: "Upload selesai, video sedang diproses",
+          video: {
+            id: video.id,
+            title: video.title,
+            status: "QUEUED",
+          },
+        };
+      } catch (error) {
+        if (error instanceof IncompleteUploadError) {
+          set.status = 400;
+          return { message: error.message };
+        }
+
+        set.status = 500;
+        console.error("Error saat complete upload:", error);
+        return { message: "Terjadi kesalahan pada server" };
+      }
+    },
+    { params: completeUploadParamsSchema }
     );
