@@ -3,6 +3,7 @@ import { corsPlugin } from "./plugins/cors.plugin";
 import { errorHandlerPlugin } from "./plugins/error-handler.plugin";
 import { healthController } from "./modules/health/health.controller";
 import { authController } from "./modules/auth/auth.controller";
+import { videoController } from "./modules/video/video.controller";
 import { ensureStorageDirs } from "@mediaflow/storage";
 
 const PORT = process.env.PORT ?? 4000;
@@ -15,6 +16,7 @@ const app = new Elysia()
   .use(corsPlugin)
   .use(healthController)
   .use(authController)
+  .use(videoController)
   .listen(PORT);
 
 console.log(`🦊 Mediaflow API is running at ${app.server?.hostname}:${app.server?.port}`);
