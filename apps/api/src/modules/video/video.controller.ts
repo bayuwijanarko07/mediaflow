@@ -1,9 +1,14 @@
 import { Elysia } from "elysia";
 import { requireAdmin } from "../../modules/auth/admin.middleware";
-import { initUploadBodySchema, chunkParamsSchema  } from "./video.schema";
+import {
+  initUploadBodySchema,
+  chunkParamsSchema,
+  uploadStatusParamsSchema,
+} from "./video.schema";
 import {
   initUploadSession,
   receiveChunk,
+  getUploadStatus,
   FileTooLargeError,
   UploadSessionNotFoundError,
   InvalidChunkIndexError,
@@ -75,4 +80,22 @@ export const videoController = new Elysia({ prefix: "/videos" })
         }
     },
     { params: chunkParamsSchema }
+    )
+    .get(
+    "/upload/:uploadId/status",
+    async ({ params, set }) => {
+      try {
+        const status = await getUploadStatus(params.uploadId);
+        return status;
+      } catch (error) {
+        if (error instanceof UploadSessionNotFoundError) {
+          set.status = 404;
+          return { message: error.message };
+        }
+
+        set.status = 500;
+        return { message: "Terjadi kesalahan pada server" };
+      }
+    },
+    { params: uploadStatusParamsSchema }
     );

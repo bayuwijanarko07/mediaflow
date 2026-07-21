@@ -89,7 +89,6 @@ export async function saveUploadSession(session: UploadSession): Promise<void> {
   );
 }
 
-
 export class UploadSessionNotFoundError extends Error {
   constructor() {
     super("Sesi upload tidak ditemukan atau sudah kedaluwarsa");
@@ -146,5 +145,30 @@ export async function receiveChunk(params: {
   return {
     receivedCount: session.receivedChunks.length,
     totalChunks: session.totalChunks,
+  };
+}
+
+/**
+ * Ambil status upload — daftar chunk yang sudah diterima, dipakai
+ * frontend untuk resume upload setelah koneksi putus (tidak perlu
+ * kirim ulang chunk yang sudah sukses sebelumnya).
+ */
+export async function getUploadStatus(uploadId: string): Promise<{
+  uploadId: string;
+  totalChunks: number;
+  receivedChunks: number[];
+  isComplete: boolean;
+}> {
+  const session = await getUploadSession(uploadId);
+
+  if (!session) {
+    throw new UploadSessionNotFoundError();
+  }
+
+  return {
+    uploadId: session.uploadId,
+    totalChunks: session.totalChunks,
+    receivedChunks: session.receivedChunks,
+    isComplete: session.receivedChunks.length === session.totalChunks,
   };
 }

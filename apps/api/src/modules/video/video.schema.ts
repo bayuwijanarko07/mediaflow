@@ -12,4 +12,8 @@ export const chunkParamsSchema = t.Object({
   chunkIndex: t.Numeric(), // otomatis convert string dari URL param jadi number
 });
 
+export const uploadStatusParamsSchema = t.Object({
+  uploadId: t.String(),
+});
+
 export type InitUploadBody = typeof initUploadBodySchema.static;
