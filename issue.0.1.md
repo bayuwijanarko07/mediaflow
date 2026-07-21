@@ -390,10 +390,10 @@ Middleware tambahan (dibangun di atas `requireAuth` yang sudah ada) yang memvali
 Mulai sesi upload baru — generate `uploadId`, simpan metadata sesi upload ke Redis (nama file, total chunk, ukuran).
 
 **Acceptance Criteria:**
-- [ ] Protected dengan `requireAdmin`
-- [ ] Return `uploadId` unik + info `chunkSize` yang dipakai
-- [ ] Validasi: nama file, ukuran total tidak melebihi `MAX_FILE_SIZE_GB`
-- [ ] Sesi upload tersimpan di Redis dengan TTL wajar (misal 24 jam) agar sesi basi otomatis terhapus
+- [x] Protected dengan `requireAdmin`
+- [x] Return `uploadId` unik + info `chunkSize` yang dipakai
+- [x] Validasi: nama file, ukuran total tidak melebihi `MAX_FILE_SIZE_GB`
+- [x] Sesi upload tersimpan di Redis dengan TTL wajar (misal 24 jam) agar sesi basi otomatis terhapus
 
 ---
 

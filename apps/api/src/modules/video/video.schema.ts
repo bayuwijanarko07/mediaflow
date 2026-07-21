@@ -7,4 +7,9 @@ export const initUploadBodySchema = t.Object({
   description: t.Optional(t.String()),
 });
 
+export const chunkParamsSchema = t.Object({
+  uploadId: t.String(),
+  chunkIndex: t.Numeric(), // otomatis convert string dari URL param jadi number
+});
+
 export type InitUploadBody = typeof initUploadBodySchema.static;
