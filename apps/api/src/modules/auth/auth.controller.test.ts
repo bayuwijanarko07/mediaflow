@@ -9,9 +9,12 @@ const testEmail = `test-${Date.now()}@mediaflow.dev`;
 
 describe("POST /auth/register", () => {
   afterAll(async () => {
-    // Bersihkan data test
+    // Bersihkan data test — hanya user yang dibuat oleh test ini
+    await prisma.refreshToken.deleteMany({
+      where: { user: { email: testEmail } },
+    });
     await prisma.user.deleteMany({
-      where: { email: { contains: "@mediaflow.dev" } },
+      where: { email: testEmail },
     });
     await prisma.$disconnect();
   });

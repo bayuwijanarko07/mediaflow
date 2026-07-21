@@ -27,19 +27,20 @@ export const videoController = new Elysia({ prefix: "/videos" })
         async ({ body, adminUser, set }) => {
         try {
             const result = await initUploadSession({
-            fileName: body.fileName,
-            fileSizeBytes: body.fileSizeBytes,
-            title: body.title,
-            description: body.description,
-            uploadedById: adminUser.id,
+              fileName: body.fileName,
+              fileSizeBytes: body.fileSizeBytes,
+              title: body.title,
+              description: body.description,
+              genreIds: body.genreIds,
+              uploadedById: adminUser.id,
             });
 
             set.status = 201;
             return result;
         } catch (error) {
             if (error instanceof FileTooLargeError) {
-            set.status = 413; // Payload Too Large
-            return { message: error.message };
+              set.status = 413; // Payload Too Large
+              return { message: error.message };
             }
 
             set.status = 500;
@@ -128,6 +129,7 @@ export const videoController = new Elysia({ prefix: "/videos" })
           description: session.description,
           uploadedById: adminUser.id,
           rawFileKey: rawFilePath,
+          genreIds: session.genreIds,
         });
 
         // 3. Push job transcoding ke BullMQ (status jadi QUEUED)

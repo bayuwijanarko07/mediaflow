@@ -1,7 +1,6 @@
 import { redis } from "../../lib/redis";
-import { getStoragePath, saveFile, readFile, deleteDirectory, deleteFile } from "@mediaflow/storage";
-import { extname } from "node:path"
-
+import { getStoragePath, saveFile, readFile, deleteDirectory } from "@mediaflow/storage";
+import { extname } from "node:path";
 import {
   CHUNK_SIZE_BYTES,
   MAX_FILE_SIZE_BYTES,
@@ -17,21 +16,54 @@ export class FileTooLargeError extends Error {
   }
 }
 
+export class UploadSessionNotFoundError extends Error {
+  constructor() {
+    super("Sesi upload tidak ditemukan atau sudah kedaluwarsa");
+    this.name = "UploadSessionNotFoundError";
+  }
+}
+
+export class InvalidChunkIndexError extends Error {
+  constructor(chunkIndex: number, totalChunks: number) {
+    super(`Chunk index ${chunkIndex} tidak valid (total chunk: ${totalChunks})`);
+    this.name = "InvalidChunkIndexError";
+  }
+}
+
+export class IncompleteUploadError extends Error {
+  constructor(received: number, total: number) {
+    super(`Upload belum lengkap: ${received}/${total} chunk diterima`);
+    this.name = "IncompleteUploadError";
+  }
+}
+
 function getSessionKey(uploadId: string): string {
   return `${UPLOAD_SESSION_REDIS_PREFIX}${uploadId}`;
 }
 
 /**
- * Mulai sesi upload baru. Menghitung total chunk yang diharapkan
- * berdasarkan ukuran file dan CHUNK_SIZE_BYTES, lalu simpan metadata
- * sesi ke Redis dengan TTL supaya sesi yang ditinggalkan (tidak
- * pernah di-complete) otomatis "basi" dan terhapus sendiri.
+ * Key terpisah untuk Redis SET yang menyimpan index chunk yang sudah
+ * diterima. Dipisah dari JSON metadata sesi supaya update-nya bisa
+ * pakai SADD yang ATOMIC — mencegah race condition saat banyak chunk
+ * di-upload paralel bersamaan (lihat penjelasan lengkap di komentar
+ * fungsi receiveChunk di bawah).
+ */
+function getReceivedChunksKey(uploadId: string): string {
+  return `${UPLOAD_SESSION_REDIS_PREFIX}${uploadId}:received-chunks`;
+}
+
+/**
+ * Mulai sesi upload baru. Metadata (fileName, totalChunks, dst) disimpan
+ * sebagai JSON biasa karena TIDAK pernah di-update konkuren dari banyak
+ * request sekaligus — hanya dibaca. Tracking chunk yang diterima
+ * disimpan TERPISAH di Redis Set (lihat markChunkReceived).
  */
 export async function initUploadSession(params: {
   fileName: string;
   fileSizeBytes: number;
   title: string;
   description?: string;
+  genreIds?: string[];
   uploadedById: string;
 }): Promise<{ uploadId: string; chunkSize: number; totalChunks: number }> {
   const maxSizeGb = MAX_FILE_SIZE_BYTES / (1024 * 1024 * 1024);
@@ -43,15 +75,15 @@ export async function initUploadSession(params: {
   const uploadId = crypto.randomUUID();
   const totalChunks = Math.ceil(params.fileSizeBytes / CHUNK_SIZE_BYTES);
 
-  const session: UploadSession = {
+  const session: Omit<UploadSession, "receivedChunks"> = {
     uploadId,
     fileName: params.fileName,
     fileSizeBytes: params.fileSizeBytes,
     totalChunks,
     title: params.title,
     description: params.description,
+    genreIds: params.genreIds,
     uploadedById: params.uploadedById,
-    receivedChunks: [],
     createdAt: new Date().toISOString(),
   };
 
@@ -66,51 +98,55 @@ export async function initUploadSession(params: {
 }
 
 /**
- * Ambil data sesi upload dari Redis. Return null kalau sesi
- * tidak ditemukan (belum pernah dibuat, atau sudah expired/basi).
+ * Ambil metadata sesi (TANPA receivedChunks — itu diambil terpisah
+ * lewat getReceivedChunks kalau dibutuhkan).
  */
 export async function getUploadSession(
   uploadId: string
-): Promise<UploadSession | null> {
+): Promise<Omit<UploadSession, "receivedChunks"> | null> {
   const raw = await redis.get(getSessionKey(uploadId));
   if (!raw) return null;
-  return JSON.parse(raw) as UploadSession;
+  return JSON.parse(raw);
 }
 
 /**
- * Simpan ulang data sesi (dipakai nanti di Issue #35 saat menandai
- * chunk baru diterima).
+ * Tandai 1 chunk index sudah diterima. Pakai SADD (atomic) — aman
+ * dipanggil dari banyak request paralel bersamaan tanpa race condition,
+ * karena Redis menjamin setiap command SADD dieksekusi secara utuh
+ * (single-threaded execution model), tidak seperti pola read-modify-write
+ * manual yang rawan lost update.
  */
-export async function saveUploadSession(session: UploadSession): Promise<void> {
-  await redis.set(
-    getSessionKey(session.uploadId),
-    JSON.stringify(session),
-    "EX",
-    UPLOAD_SESSION_TTL_SECONDS
-  );
-}
-
-export class UploadSessionNotFoundError extends Error {
-  constructor() {
-    super("Sesi upload tidak ditemukan atau sudah kedaluwarsa");
-    this.name = "UploadSessionNotFoundError";
-  }
-}
-
-export class InvalidChunkIndexError extends Error {
-  constructor(chunkIndex: number, totalChunks: number) {
-    super(
-      `Chunk index ${chunkIndex} tidak valid (total chunk: ${totalChunks})`
-    );
-    this.name = "InvalidChunkIndexError";
-  }
+export async function markChunkReceived(
+  uploadId: string,
+  chunkIndex: number
+): Promise<void> {
+  const key = getReceivedChunksKey(uploadId);
+  await redis.sadd(key, String(chunkIndex));
+  // Refresh TTL supaya konsisten dengan masa berlaku sesi utama
+  await redis.expire(key, UPLOAD_SESSION_TTL_SECONDS);
 }
 
 /**
- * Terima 1 chunk file, simpan ke disk, dan update status chunk
- * yang sudah diterima di Redis. Idempotent — kalau chunk yang sama
- * dikirim ulang (misal karena retry dari client), tidak masalah,
- * cukup di-overwrite dan index-nya tidak dobel di receivedChunks.
+ * Ambil daftar index chunk yang sudah diterima, terurut ascending.
+ */
+export async function getReceivedChunks(uploadId: string): Promise<number[]> {
+  const key = getReceivedChunksKey(uploadId);
+  const members = await redis.smembers(key);
+  return members.map(Number).sort((a, b) => a - b);
+}
+
+/**
+ * Hitung jumlah chunk yang sudah diterima. Pakai SCARD (juga atomic
+ * dan O(1)) — lebih efisien daripada SMEMBERS kalau cuma butuh angkanya.
+ */
+export async function getReceivedChunkCount(uploadId: string): Promise<number> {
+  const key = getReceivedChunksKey(uploadId);
+  return redis.scard(key);
+}
+
+/**
+ * Terima 1 chunk file, simpan ke disk, dan tandai index-nya diterima
+ * lewat Redis Set (atomic, aman untuk upload paralel).
  */
 export async function receiveChunk(params: {
   uploadId: string;
@@ -127,7 +163,6 @@ export async function receiveChunk(params: {
     throw new InvalidChunkIndexError(params.chunkIndex, session.totalChunks);
   }
 
-  // Simpan chunk ke disk
   const chunkPath = getStoragePath(
     "uploads-temp",
     params.uploadId,
@@ -135,24 +170,16 @@ export async function receiveChunk(params: {
   );
   await saveFile(chunkPath, params.chunkData);
 
-  // Update daftar chunk yang sudah diterima (hindari duplikat kalau retry)
-  if (!session.receivedChunks.includes(params.chunkIndex)) {
-    session.receivedChunks.push(params.chunkIndex);
-    session.receivedChunks.sort((a, b) => a - b);
-  }
+  // Atomic — aman dipanggil paralel, tidak akan kehilangan update
+  await markChunkReceived(params.uploadId, params.chunkIndex);
 
-  await saveUploadSession(session);
+  const receivedCount = await getReceivedChunkCount(params.uploadId);
 
-  return {
-    receivedCount: session.receivedChunks.length,
-    totalChunks: session.totalChunks,
-  };
+  return { receivedCount, totalChunks: session.totalChunks };
 }
 
 /**
- * Ambil status upload — daftar chunk yang sudah diterima, dipakai
- * frontend untuk resume upload setelah koneksi putus (tidak perlu
- * kirim ulang chunk yang sudah sukses sebelumnya).
+ * Ambil status upload lengkap — gabungan metadata + daftar chunk diterima.
  */
 export async function getUploadStatus(uploadId: string): Promise<{
   uploadId: string;
@@ -166,25 +193,20 @@ export async function getUploadStatus(uploadId: string): Promise<{
     throw new UploadSessionNotFoundError();
   }
 
+  const receivedChunks = await getReceivedChunks(uploadId);
+
   return {
     uploadId: session.uploadId,
     totalChunks: session.totalChunks,
-    receivedChunks: session.receivedChunks,
-    isComplete: session.receivedChunks.length === session.totalChunks,
+    receivedChunks,
+    isComplete: receivedChunks.length === session.totalChunks,
   };
 }
 
-export class IncompleteUploadError extends Error {
-  constructor(received: number, total: number) {
-    super(`Upload belum lengkap: ${received}/${total} chunk diterima`);
-    this.name = "IncompleteUploadError";
-  }
-}
-
 /**
- * Gabungkan seluruh chunk (berurutan sesuai index) jadi 1 file utuh,
- * simpan ke raw-temp/, lalu hapus folder chunk sementara karena
- * sudah tidak dibutuhkan lagi setelah assembly sukses.
+ * Gabungkan seluruh chunk jadi 1 file utuh. Sekarang mengecek
+ * kelengkapan lewat getReceivedChunkCount (Set), bukan panjang array
+ * di JSON — konsisten dengan sumber kebenaran yang baru.
  */
 export async function assembleChunks(params: {
   uploadId: string;
@@ -196,22 +218,15 @@ export async function assembleChunks(params: {
     throw new UploadSessionNotFoundError();
   }
 
-  if (session.receivedChunks.length !== session.totalChunks) {
-    throw new IncompleteUploadError(
-      session.receivedChunks.length,
-      session.totalChunks
-    );
+  const receivedCount = await getReceivedChunkCount(params.uploadId);
+
+  if (receivedCount !== session.totalChunks) {
+    throw new IncompleteUploadError(receivedCount, session.totalChunks);
   }
 
   const extension = extname(params.fileName) || ".mp4";
-  const rawFilePath = getStoragePath(
-    "raw-temp",
-    `${params.uploadId}${extension}`
-  );
+  const rawFilePath = getStoragePath("raw-temp", `${params.uploadId}${extension}`);
 
-  // Gabungkan chunk berurutan (index 0, 1, 2, ...) jadi satu file utuh.
-  // Dibaca satu per satu (bukan load semua ke memory sekaligus) supaya
-  // aman untuk file besar (>1GB) tanpa membebani RAM.
   const chunkBuffers: Uint8Array[] = [];
   for (let i = 0; i < session.totalChunks; i++) {
     const chunkPath = getStoragePath("uploads-temp", params.uploadId, `chunk-${i}`);
@@ -229,17 +244,15 @@ export async function assembleChunks(params: {
   }
 
   await saveFile(rawFilePath, combined);
-
-  // Hapus folder chunk sementara — sudah tidak dibutuhkan setelah assembly
   await deleteDirectory(getStoragePath("uploads-temp", params.uploadId));
 
   return { rawFilePath };
 }
 
 /**
- * Hapus sesi upload dari Redis setelah proses complete selesai
- * (baik sukses maupun kalau perlu dibatalkan).
+ * Hapus sesi upload (metadata + set chunk diterima) dari Redis.
  */
 export async function deleteUploadSession(uploadId: string): Promise<void> {
-  await redis.del(`${UPLOAD_SESSION_REDIS_PREFIX}${uploadId}`);
+  await redis.del(getSessionKey(uploadId));
+  await redis.del(getReceivedChunksKey(uploadId));
 }

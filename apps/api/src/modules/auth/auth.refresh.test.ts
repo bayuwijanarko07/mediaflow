@@ -98,12 +98,15 @@ describe("POST /auth/refresh", () => {
   test("refresh token yang sudah expired ditolak", async () => {
     // Buat refresh token dengan expiresAt di masa lalu
     const user = await prisma.user.findUnique({ where: { email: testEmail } });
+    if (!user) {
+      throw new Error(`User ${testEmail} tidak ditemukan di database — pastikan register berhasil di beforeAll`);
+    }
     const expiredToken = crypto.randomUUID();
 
     await prisma.refreshToken.create({
             data: {
             token: expiredToken,
-            userId: user!.id,
+            userId: user.id,
             expiresAt: new Date(Date.now() - 1000), // sudah lewat 1 detik yang lalu
         },
     });

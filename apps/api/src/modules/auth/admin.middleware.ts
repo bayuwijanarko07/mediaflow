@@ -1,15 +1,26 @@
 import { Elysia } from "elysia";
-import { requireAuth } from "../../middleware/auth.middleware";
+import { jwtPlugin } from "../../plugins/jwt.plugin";
 import { getUserById } from "../../modules/auth/auth.service";
 
 export const requireAdmin = new Elysia()
-  .use(requireAuth)
-  .derive({ as: "scoped" }, async ({ userId, set }) => {
-    if (!userId) {
+  .use(jwtPlugin)
+  .derive({ as: "scoped" }, async ({ jwt, headers, set }) => {
+    const authHeader = headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      set.status = 401;
+      throw new Error("Unauthorized: token tidak ditemukan");
+    }
+
+    const token = authHeader.slice("Bearer ".length);
+    const payload = await jwt.verify(token);
+
+    if (!payload) {
       set.status = 401;
       throw new Error("Unauthorized: token tidak valid");
     }
 
+    const userId = payload.sub as string;
     const user = await getUserById(userId);
 
     if (!user) {
@@ -25,4 +36,4 @@ export const requireAdmin = new Elysia()
     return {
       adminUser: user,
     };
-  });
+  });

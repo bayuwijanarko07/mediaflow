@@ -30,20 +30,25 @@ describe("assembleChunks & complete flow", () => {
   });
 
   test("assembleChunks menggabungkan chunk jadi 1 file utuh dengan urutan benar", async () => {
+    // Gunakan ukuran file yang pasti menghasilkan tepat 2 chunk
+    // (CHUNK_SIZE_BYTES default = 5MB, jadi 10MB = 2 chunk persis)
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
     const session = await initUploadSession({
       fileName: "test.mp4",
-      fileSizeBytes: 10, // sengaja kecil untuk kontrol isi persis
+      fileSizeBytes: CHUNK_SIZE * 2, // pasti 2 chunk
       title: "Test Assembly",
       uploadedById: "user-1",
     });
     createdUploadIds.push(session.uploadId);
 
-    // Override totalChunks jadi 2 secara manual via chunk kecil terkontrol
-    const chunk0 = new TextEncoder().encode("Hello").buffer; // 5 byte
-    const chunk1 = new TextEncoder().encode("World").buffer; // 5 byte
+    // Buat 2 chunk dengan konten yang bisa diverifikasi
+    // Chunk nyata harus berukuran CHUNK_SIZE, tapi untuk tes konten
+    // kita isi dengan pola sederhana
+    const chunk0Data = new Uint8Array(CHUNK_SIZE).fill(0x41); // 'A' * 5MB
+    const chunk1Data = new Uint8Array(CHUNK_SIZE).fill(0x42); // 'B' * 5MB
 
-    await receiveChunk({ uploadId: session.uploadId, chunkIndex: 0, chunkData: chunk0 });
-    await receiveChunk({ uploadId: session.uploadId, chunkIndex: 1, chunkData: chunk1 });
+    await receiveChunk({ uploadId: session.uploadId, chunkIndex: 0, chunkData: chunk0Data.buffer });
+    await receiveChunk({ uploadId: session.uploadId, chunkIndex: 1, chunkData: chunk1Data.buffer });
 
     const { rawFilePath } = await assembleChunks({
       uploadId: session.uploadId,
@@ -52,8 +57,14 @@ describe("assembleChunks & complete flow", () => {
 
     expect(pathExists(rawFilePath)).toBe(true);
 
-    const content = await Bun.file(rawFilePath).text();
-    expect(content).toBe("HelloWorld"); // urutan harus benar: chunk0 + chunk1
+    // Verifikasi ukuran file gabungan = 2 chunk
+    const assembled = await Bun.file(rawFilePath).arrayBuffer();
+    expect(assembled.byteLength).toBe(CHUNK_SIZE * 2);
+
+    // Verifikasi urutan: byte pertama = 'A', byte terakhir = 'B'
+    const view = new Uint8Array(assembled);
+    expect(view[0]).toBe(0x41);
+    expect(view[CHUNK_SIZE]).toBe(0x42);
 
     // Folder uploads-temp harus sudah terhapus
     const uploadTempDir = getStoragePath("uploads-temp", session.uploadId);

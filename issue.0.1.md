@@ -403,10 +403,10 @@ Mulai sesi upload baru — generate `uploadId`, simpan metadata sesi upload ke R
 Terima 1 chunk file, simpan ke `uploads-temp/{uploadId}/`, update status chunk yang diterima di Redis.
 
 **Acceptance Criteria:**
-- [ ] Validasi `uploadId` ada dan masih valid (belum expired/complete)
-- [ ] Chunk disimpan dengan nama konsisten (`chunk-{index}`)
-- [ ] Redis diupdate menandai chunk index tersebut sudah diterima
-- [ ] Return 200 dengan info progress (berapa chunk sudah diterima dari total)
+- [x] Validasi `uploadId` ada dan masih valid (belum expired/complete)
+- [x] Chunk disimpan dengan nama konsisten (`chunk-{index}`)
+- [x] Redis diupdate menandai chunk index tersebut sudah diterima
+- [x] Return 200 dengan info progress (berapa chunk sudah diterima dari total)
 
 ---
 
@@ -416,8 +416,8 @@ Terima 1 chunk file, simpan ke `uploads-temp/{uploadId}/`, update status chunk y
 Cek chunk mana saja yang sudah diterima — dipakai frontend untuk resume upload setelah koneksi putus.
 
 **Acceptance Criteria:**
-- [ ] Return list index chunk yang sudah diterima (dari Redis)
-- [ ] Return 404 kalau `uploadId` tidak ditemukan/sudah expired
+- [x] Return list index chunk yang sudah diterima (dari Redis)
+- [x] Return 404 kalau `uploadId` tidak ditemukan/sudah expired
 
 ---
 
@@ -427,12 +427,12 @@ Cek chunk mana saja yang sudah diterima — dipakai frontend untuk resume upload
 Setelah semua chunk diterima, assemble jadi 1 file utuh, simpan ke `raw-temp/`, buat record `Video` (status `UPLOADED`), lalu push job transcoding ke BullMQ.
 
 **Acceptance Criteria:**
-- [ ] Validasi semua chunk (sesuai total yang didaftarkan saat init) benar-benar sudah diterima, kalau belum lengkap return 400
-- [ ] File di-assemble berurutan sesuai index chunk, hasil disimpan di `raw-temp/{videoId}.ext`
-- [ ] Record `Video` dibuat di database dengan status `UPLOADED` lalu `QUEUED`
-- [ ] Job push ke `transcode-queue` (BullMQ) berisi `videoId` dan path raw file
-- [ ] Folder `uploads-temp/{uploadId}/` dihapus setelah assembly sukses (chunk sudah tidak dibutuhkan)
-- [ ] Test: complete dengan chunk lengkap (sukses), complete dengan chunk belum lengkap (400)
+- [x] Validasi semua chunk (sesuai total yang didaftarkan saat init) benar-benar sudah diterima, kalau belum lengkap return 400
+- [x] File di-assemble berurutan sesuai index chunk, hasil disimpan di `raw-temp/{videoId}.ext`
+- [x] Record `Video` dibuat di database dengan status `UPLOADED` lalu `QUEUED`
+- [x] Job push ke `transcode-queue` (BullMQ) berisi `videoId` dan path raw file
+- [x] Folder `uploads-temp/{uploadId}/` dihapus setelah assembly sukses (chunk sudah tidak dibutuhkan)
+- [x] Test: complete dengan chunk lengkap (sukses), complete dengan chunk belum lengkap (400)
 
 ---
 
@@ -442,10 +442,10 @@ Setelah semua chunk diterima, assemble jadi 1 file utuh, simpan ke `raw-temp/`, 
 Hook React untuk slice file jadi chunk, upload berurutan/paralel terbatas, tracking progress, dan retry per-chunk kalau gagal.
 
 **Acceptance Criteria:**
-- [ ] File di-slice sesuai `chunkSize` dari response `/upload/init`
-- [ ] Progress keseluruhan (persentase) ter-update real-time di state React
-- [ ] Retry otomatis per-chunk (maksimal N percobaan) kalau 1 chunk gagal terkirim
-- [ ] Kalau upload dihentikan di tengah (refresh/close tab) dan dibuka lagi, bisa lanjut dari status `/upload/:uploadId/status` (tidak upload ulang chunk yang sudah sukses)
+- [x] File di-slice sesuai `chunkSize` dari response `/upload/init`
+- [x] Progress keseluruhan (persentase) ter-update real-time di state React
+- [x] Retry otomatis per-chunk (maksimal N percobaan) kalau 1 chunk gagal terkirim
+- [x] Kalau upload dihentikan di tengah (refresh/close tab) dan dibuka lagi, bisa lanjut dari status `/upload/:uploadId/status` (tidak upload ulang chunk yang sudah sukses)
 
 ---
 
@@ -455,10 +455,10 @@ Hook React untuk slice file jadi chunk, upload berurutan/paralel terbatas, track
 UI untuk admin pilih file, isi metadata dasar (judul, deskripsi, genre), dan lihat progress upload.
 
 **Acceptance Criteria:**
-- [ ] Form input file + metadata (judul, deskripsi, genre — bisa multi-select)
-- [ ] Progress bar upload keseluruhan, ditampilkan real-time
-- [ ] Validasi client-side: format file didukung, ukuran maksimal
-- [ ] Redirect/notifikasi ke halaman status setelah upload selesai (lanjut ke tahap transcoding)
+- [x] Form input file + metadata (judul, deskripsi, genre — bisa multi-select)
+- [x] Progress bar upload keseluruhan, ditampilkan real-time
+- [x] Validasi client-side: format file didukung, ukuran maksimal
+- [x] Redirect/notifikasi ke halaman status setelah upload selesai (lanjut ke tahap transcoding)
 
 ---
 

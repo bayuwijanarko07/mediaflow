@@ -5,6 +5,7 @@ export const initUploadBodySchema = t.Object({
   fileSizeBytes: t.Number({ minimum: 1, error: "Ukuran file tidak valid" }),
   title: t.String({ minLength: 1, error: "Judul video wajib diisi" }),
   description: t.Optional(t.String()),
+  genreIds: t.Optional(t.Array(t.String())),
 });
 
 export const chunkParamsSchema = t.Object({

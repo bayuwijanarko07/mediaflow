@@ -38,6 +38,7 @@ interface UseChunkedUploadState {
 interface UploadMetadata {
   title: string;
   description?: string;
+  genreIds?: string[];
 }
 
 export function useChunkedUpload() {
@@ -160,6 +161,7 @@ export function useChunkedUpload() {
             fileSizeBytes: file.size,
             title: metadata.title,
             description: metadata.description,
+            genreIds: metadata.genreIds,
           }),
         });
 

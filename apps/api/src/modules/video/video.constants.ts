@@ -16,7 +16,7 @@ export interface UploadSession {
   totalChunks: number;
   title: string;
   description?: string;
+  genreIds?: string[];
   uploadedById: string;
-  receivedChunks: number[];
   createdAt: string;
 }

@@ -35,3 +35,43 @@ export interface TranscodeJobData {
   videoId: string;
   rawFilePath: string;
 }
+
+export interface InitUploadResponse {
+  uploadId: string;
+  chunkSize: number;
+  totalChunks: number;
+}
+
+export interface ChunkUploadResponse {
+  message: string;
+  progress: {
+    received: number;
+    total: number;
+    percentage: number;
+  };
+}
+
+export interface UploadStatusResponse {
+  uploadId: string;
+  totalChunks: number;
+  receivedChunks: number[];
+  isComplete: boolean;
+}
+
+export interface CompleteUploadResponse {
+  message: string;
+  video: {
+    id: string;
+    title: string;
+    status: string;
+  };
+}
+
+export interface Genre {
+  id: string;
+  name: string;
+}
+
+export interface GenreListResponse {
+  genres: Genre[];
+}

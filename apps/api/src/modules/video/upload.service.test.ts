@@ -1,6 +1,6 @@
 import { describe, expect, test, afterEach } from "bun:test";
 import { redis } from "../../lib/redis";
-import { initUploadSession, getUploadSession, FileTooLargeError } from "./upload.service";
+import { initUploadSession, getUploadSession, FileTooLargeError, getReceivedChunks } from "./upload.service";
 
 describe("initUploadSession", () => {
   let createdUploadId: string | null = null;
@@ -69,7 +69,8 @@ describe("initUploadSession", () => {
     expect(session).not.toBeNull();
     expect(session?.fileName).toBe("readback.mp4");
     expect(session?.uploadedById).toBe("user-123");
-    expect(session?.receivedChunks).toEqual([]);
+    const receivedChunks = await getReceivedChunks(result.uploadId);
+    expect(receivedChunks).toEqual([]);
   });
 
   test("getUploadSession return null untuk uploadId yang tidak ada", async () => {

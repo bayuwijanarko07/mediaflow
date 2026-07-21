@@ -6,6 +6,7 @@ export async function createVideoRecord(params: {
   description?: string;
   uploadedById: string;
   rawFileKey: string;
+  genreIds?: string[];
 }) {
   return prisma.video.create({
     data: {
@@ -14,6 +15,9 @@ export async function createVideoRecord(params: {
       uploadedById: params.uploadedById,
       rawFileKey: params.rawFileKey,
       status: "UPLOADED",
+      genres: params.genreIds?.length
+        ? { create: params.genreIds.map((genreId) => ({ genreId })) }
+        : undefined,
     },
   });
 }
