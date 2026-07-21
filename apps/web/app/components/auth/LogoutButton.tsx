@@ -16,10 +16,10 @@ export function LogoutButton({ className, children }: LogoutButtonProps) {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    try {c
+    try {
       await logout();
     } catch (error) {
-+     console.error("Logout API gagal:", error);
+      console.error("Logout API gagal:", error);
     } finally {
       // redirect selalu jalan, baik logout API sukses maupun gagal --
       // dari sudut pandang user, klik logout harus selalu membawa

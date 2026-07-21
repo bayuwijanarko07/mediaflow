@@ -128,10 +128,20 @@ export const api = {
 };
 
 async function handleJsonResponse<T>(res: Response): Promise<T> {
-  const data = await res.json().catch(() => null);
+  const contentType = res.headers.get("content-type");
+  const isJson = contentType?.includes("application/json");
+
+  const data = isJson
+    ? await res.json().catch(() => null)
+    : await res.text().catch(() => null);
 
   if (!res.ok) {
-    const message = data?.message ?? `Request gagal dengan status ${res.status}`;
+    const message =
+      isJson && data && typeof data === "object" && "message" in data
+        ? (data as { message: string }).message
+        : typeof data === "string"
+          ? data
+          : `Request gagal dengan status ${res.status}`;
     throw new Error(message);
   }
 

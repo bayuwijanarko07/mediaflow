@@ -64,6 +64,7 @@ describe("LogoutButton", () => {
     fireEvent.click(button);
 
     await waitFor(() => {
+      expect(logoutMock).toHaveBeenCalled();
       expect(button.disabled).toBe(true);
     });
 
