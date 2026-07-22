@@ -3,6 +3,7 @@ import { prisma } from "@mediaflow/database";
 import { ensureStorageDirs } from "@mediaflow/storage";
 import { createQueueConnection, TRANSCODE_QUEUE_NAME } from "@mediaflow/queue";
 import type { TranscodeJobData } from "@mediaflow/queue";
+import { processTranscodeJob } from "./jobs/transcode.job";
 
 async function main() {
   console.log("🔧 Mediaflow Worker started");
@@ -13,27 +14,19 @@ async function main() {
 
   const worker = new Worker<TranscodeJobData>(
     TRANSCODE_QUEUE_NAME,
-    async (job) => {
-      console.log(`📦 Job diterima: ${job.id}`, job.data);
-
-      // Placeholder — logic transcoding sesungguhnya akan
-      // diimplementasikan di Issue #40-41
-      console.log(`(Placeholder) Memproses video ${job.data.videoId}...`);
-
-      return { processed: true };
-    },
+    processTranscodeJob,
     {
       connection: createQueueConnection(),
-      concurrency: 1, // cukup 1 job diproses bersamaan, sesuai kapasitas 1 PC
+      concurrency: 1, // 1 job transcoding bersamaan, sesuai kapasitas 1 PC
     }
   );
 
   worker.on("completed", (job) => {
-    console.log(`✅ Job ${job.id} selesai`);
+    console.log(`✅ Job ${job.id} (video: ${job.data.videoId}) selesai sepenuhnya`);
   });
 
   worker.on("failed", (job, error) => {
-    console.error(`❌ Job ${job?.id} gagal:`, error.message);
+    console.error(`❌ Job ${job?.id} (video: ${job?.data.videoId}) gagal:`, error.message);
   });
 
   console.log(`👂 Worker mendengarkan queue "${TRANSCODE_QUEUE_NAME}"...`);
