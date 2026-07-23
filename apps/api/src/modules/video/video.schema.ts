@@ -21,4 +21,8 @@ export const completeUploadParamsSchema = t.Object({
   uploadId: t.String(),
 });
 
+export const videoIdParamsSchema = t.Object({
+  id: t.String(),
+});
+
 export type InitUploadBody = typeof initUploadBodySchema.static;

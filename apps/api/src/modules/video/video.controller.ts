@@ -5,6 +5,7 @@ import {
   chunkParamsSchema,
   uploadStatusParamsSchema,
   completeUploadParamsSchema,
+  videoIdParamsSchema
 } from "./video.schema";
 import {
   initUploadSession,
@@ -18,7 +19,16 @@ import {
   InvalidChunkIndexError,
   IncompleteUploadError,
 } from "./upload.service";
-import { createVideoRecord, queueTranscoding } from "./video.service";
+import { 
+  createVideoRecord,
+  queueTranscoding,
+  getVideoTranscodeJobs,
+  retryVideoTranscoding,
+  VideoNotFoundError,
+  VideoNotFailedError,
+  RawFileNotAvailableError,
+} from "./video.service";
+import { get } from "https";
 
 export const videoController = new Elysia({ prefix: "/videos" })
     .use(requireAdmin)
@@ -162,4 +172,68 @@ export const videoController = new Elysia({ prefix: "/videos" })
       }
     },
     { params: completeUploadParamsSchema }
+    )
+    .get(
+    "/admin/:id/jobs",
+    async ({ params, set }) => {
+      try {
+        const { video, jobs } = await getVideoTranscodeJobs(params.id);
+
+        return {
+          video: {
+            id: video.id,
+            title: video.title,
+            status: video.status,
+          },
+          jobs: jobs.map((job) => ({
+            id: job.id,
+            status: job.status,
+            progress: job.progress,
+            errorMessage: job.errorMessage,
+            startedAt: job.startedAt,
+            completedAt: job.completedAt,
+            createdAt: job.createdAt,
+          })),
+        };
+      } catch (error) {
+        if (error instanceof VideoNotFoundError) {
+          set.status = 404;
+          return { message: error.message };
+        }
+
+        set.status = 500;
+        return { message: "Terjadi kesalahan pada server" };
+      }
+    },
+    { params: videoIdParamsSchema }
+    )
+    .post(
+    "/admin/:id/retry",
+    async ({ params, set }) => {
+      try {
+        await retryVideoTranscoding(params.id);
+
+        set.status = 200;
+        return { message: "Video berhasil di-queue ulang untuk transcoding" };
+      } catch (error) {
+        if (error instanceof VideoNotFoundError) {
+          set.status = 404;
+          return { message: error.message };
+        }
+
+        if (error instanceof VideoNotFailedError) {
+          set.status = 400;
+          return { message: error.message };
+        }
+
+        if (error instanceof RawFileNotAvailableError) {
+          set.status = 409;
+          return { message: error.message };
+        }
+
+        set.status = 500;
+        return { message: "Terjadi kesalahan pada server" };
+      }
+    },
+    { params: videoIdParamsSchema }
     );

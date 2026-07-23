@@ -509,9 +509,9 @@ Sesuai keputusan PRD — raw file di `raw-temp/` dihapus otomatis segera setelah
 Kalau FFmpeg gagal (file corrupt, format tidak didukung, dll), job di-mark `FAILED` dengan pesan error, bisa di-retry manual oleh admin.
 
 **Acceptance Criteria:**
-- [ ] `TranscodeJob.status` jadi `FAILED`, `errorMessage` diisi detail error
-- [ ] `Video.status` jadi `FAILED` kalau semua retry otomatis BullMQ habis
-- [ ] BullMQ dikonfigurasi retry otomatis (maks 3x, dengan backoff) sebelum dianggap gagal permanen
+- [x] `TranscodeJob.status` jadi `FAILED`, `errorMessage` diisi detail error
+- [x] `Video.status` jadi `FAILED` kalau semua retry otomatis BullMQ habis
+- [x] BullMQ dikonfigurasi retry otomatis (maks 3x, dengan backoff) sebelum dianggap gagal permanen
 
 ---
 
@@ -521,9 +521,9 @@ Kalau FFmpeg gagal (file corrupt, format tidak didukung, dll), job di-mark `FAIL
 `GET /admin/videos/:id/jobs` untuk lihat riwayat/progress, `POST /admin/videos/:id/retry` untuk retry manual.
 
 **Acceptance Criteria:**
-- [ ] `GET /admin/videos/:id/jobs` return semua `TranscodeJob` terkait video tsb, termasuk progress & error message
-- [ ] `POST /admin/videos/:id/retry` push ulang job ke queue, hanya bisa dipanggil kalau status `Video` adalah `FAILED`
-- [ ] Keduanya protected `requireAdmin`
+- [x] `GET /admin/videos/:id/jobs` return semua `TranscodeJob` terkait video tsb, termasuk progress & error message
+- [x] `POST /admin/videos/:id/retry` push ulang job ke queue, hanya bisa dipanggil kalau status `Video` adalah `FAILED`
+- [x] Keduanya protected `requireAdmin`
 
 ---
 
