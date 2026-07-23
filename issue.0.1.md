@@ -470,10 +470,10 @@ UI untuk admin pilih file, isi metadata dasar (judul, deskripsi, genre), dan lih
 Buat modul yang menjalankan FFmpeg sebagai child process untuk generate 1 rendition HLS dari file raw.
 
 **Acceptance Criteria:**
-- [ ] Fungsi `transcodeToRendition(inputPath, outputDir, resolution, bitrate)` menjalankan command FFmpeg sesuai spesifikasi PRD
-- [ ] Output `.m3u8` + segment `.ts` tersimpan di folder yang benar
-- [ ] Fungsi skip rendition kalau resolusi target lebih tinggi dari video sumber (tidak upscale)
-- [ ] Test manual: transcode 1 file sample ke 1 rendition, hasil bisa diputar di VLC/browser
+- [x] Fungsi `transcodeToRendition(inputPath, outputDir, resolution, bitrate)` menjalankan command FFmpeg sesuai spesifikasi PRD
+- [x] Output `.m3u8` + segment `.ts` tersimpan di folder yang benar
+- [x] Fungsi skip rendition kalau resolusi target lebih tinggi dari video sumber (tidak upscale)
+- [x] Test manual: transcode 1 file sample ke 1 rendition, hasil bisa diputar di VLC/browser
 
 ---
 
@@ -483,11 +483,11 @@ Buat modul yang menjalankan FFmpeg sebagai child process untuk generate 1 rendit
 Worker mengambil job dari BullMQ, jalankan transcoding untuk semua rendition yang dikonfigurasi (`TRANSCODE_RENDITIONS`), update status ke Postgres.
 
 **Acceptance Criteria:**
-- [ ] Job diambil dari queue, status `Video` diupdate jadi `PROCESSING`
-- [ ] Setiap rendition dijalankan berurutan (sesuai kapasitas 1 PC — tidak paralel penuh supaya tidak membebani CPU)
-- [ ] Record `TranscodeJob` dibuat per rendition, `progress` diupdate berkala dari parsing output FFmpeg
-- [ ] Setelah semua rendition sukses, generate master playlist (`master.m3u8`) yang reference semua rendition
-- [ ] Status `Video` diupdate jadi `READY`, `masterPlaylistUrl` diisi
+- [x] Job diambil dari queue, status `Video` diupdate jadi `PROCESSING`
+- [x] Setiap rendition dijalankan berurutan (sesuai kapasitas 1 PC — tidak paralel penuh supaya tidak membebani CPU)
+- [x] Record `TranscodeJob` dibuat per rendition, `progress` diupdate berkala dari parsing output FFmpeg
+- [x] Setelah semua rendition sukses, generate master playlist (`master.m3u8`) yang reference semua rendition
+- [x] Status `Video` diupdate jadi `READY`, `masterPlaylistUrl` diisi
 
 ---
 
@@ -497,9 +497,9 @@ Worker mengambil job dari BullMQ, jalankan transcoding untuk semua rendition yan
 Sesuai keputusan PRD — raw file di `raw-temp/` dihapus otomatis segera setelah **semua** rendition tervalidasi sukses.
 
 **Acceptance Criteria:**
-- [ ] Penghapusan **hanya** terjadi setelah status `Video` benar-benar `READY` (semua rendition sukses, bukan sebagian)
-- [ ] Kalau salah satu rendition gagal, raw file **tidak** dihapus (supaya bisa di-retry tanpa upload ulang)
-- [ ] Test: skenario semua sukses → raw terhapus; skenario 1 rendition gagal → raw tetap ada
+- [x] Penghapusan **hanya** terjadi setelah status `Video` benar-benar `READY` (semua rendition sukses, bukan sebagian)
+- [x] Kalau salah satu rendition gagal, raw file **tidak** dihapus (supaya bisa di-retry tanpa upload ulang)
+- [x] Test: skenario semua sukses → raw terhapus; skenario 1 rendition gagal → raw tetap ada
 
 ---
 

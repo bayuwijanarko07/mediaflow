@@ -4,7 +4,7 @@ import { probeVideo } from "../lib/ffprobe";
 import { transcodeToRendition } from "../lib/ffmpeg";
 import { getActiveRenditionPresets, filterPresetsBySourceResolution } from "../lib/rendition-presets";
 import { generateMasterPlaylist } from "../lib/master-playlist";
-import { deleteFile } from "@mediaflow/storage";
+import { deleteFile, deleteDirectory, getStoragePath } from "@mediaflow/storage";
 import {
   markVideoProcessing,
   markVideoReady,
@@ -18,12 +18,18 @@ import {
 
 export async function processTranscodeJob(job: Job<TranscodeJobData>): Promise<void> {
   const { videoId, rawFilePath } = job.data;
+  const maxAttempts = job.opts.attempts ?? 1;
+  const currentAttempt = job.attemptsMade + 1; // attemptsMade mulai dari 0 di percobaan pertama
 
   console.log(`\n🎬 Memulai transcoding untuk video ${videoId}`);
   console.log(`   File sumber: ${rawFilePath}`);
 
   await markVideoProcessing(videoId);
   const jobRecord = await createTranscodeJobRecord(videoId);
+
+  // Bersihkan sisa output HLS parsial dari percobaan sebelumnya (kalau ada)
+  // supaya tidak ada file segment lama tercampur dengan hasil percobaan baru
+  await deleteDirectory(getStoragePath("hls", videoId));
 
   try {
     // 1. Baca metadata video sumber
@@ -110,14 +116,30 @@ export async function processTranscodeJob(job: Job<TranscodeJobData>): Promise<v
     console.log(`\n✅ Transcoding video ${videoId} SELESAI\n`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error(`\n❌ Transcoding video ${videoId} GAGAL:`, errorMessage);
+    const isFinalAttempt = currentAttempt >= maxAttempts;
 
-    await markVideoFailed(videoId);
+    console.error(
+      `\n❌ Transcoding video ${videoId} GAGAL di percobaan ${currentAttempt}/${maxAttempts}:`,
+      errorMessage
+    );
+
     await failTranscodeJobRecord(jobRecord.id, errorMessage);
+    if (isFinalAttempt) {
+      // Baru di sini status Video benar-benar di-set FAILED —
+      // setelah SEMUA percobaan retry habis, bukan di percobaan pertama gagal
+      console.error(`   ⛔ Semua percobaan (${maxAttempts}) sudah habis. Video ditandai FAILED permanen.`);
+      await markVideoFailed(videoId);
+    } else {
+      console.log(`   🔄 Akan di-retry otomatis oleh BullMQ (percobaan ${currentAttempt + 1}/${maxAttempts})...`);
+      // Status Video TETAP "PROCESSING" — mencerminkan kondisi
+      // sesungguhnya (masih ada percobaan lagi yang akan berjalan),
+      // bukan FAILED yang menyesatkan.
+    }
 
-    // Raw file SENGAJA TIDAK dihapus kalau gagal — supaya bisa di-retry
-    // tanpa perlu upload ulang (lihat Issue #42 untuk detail lengkap)
+    // Raw file TIDAK PERNAH dihapus di jalur error, apa pun kondisinya —
+    // baik masih akan di-retry maupun sudah final gagal, supaya admin
+    // selalu bisa retry manual (Issue #44) tanpa perlu upload ulang.
 
-    throw error; // lempar ulang supaya BullMQ tahu job ini gagal (untuk retry otomatis)
+    throw error; // penting: tetap lempar ulang supaya BullMQ tahu job ini gagal
   }
 }

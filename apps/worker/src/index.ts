@@ -26,7 +26,22 @@ async function main() {
   });
 
   worker.on("failed", (job, error) => {
-    console.error(`❌ Job ${job?.id} (video: ${job?.data.videoId}) gagal:`, error.message);
+    if (!job) return;
+
+    const maxAttempts = job.opts.attempts ?? 1;
+    const isFinalFailure = job.attemptsMade >= maxAttempts;
+
+    if (isFinalFailure) {
+      console.error(
+        `❌ Job ${job.id} (video: ${job.data.videoId}) GAGAL PERMANEN setelah ${job.attemptsMade} percobaan:`,
+        error.message
+      );
+    } else {
+      console.warn(
+        `⚠️  Job ${job.id} (video: ${job.data.videoId}) gagal di percobaan ${job.attemptsMade}/${maxAttempts}, akan di-retry:`,
+        error.message
+      );
+    }
   });
 
   console.log(`👂 Worker mendengarkan queue "${TRANSCODE_QUEUE_NAME}"...`);
