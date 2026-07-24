@@ -7,6 +7,7 @@ import {
   completeUploadParamsSchema,
   videoIdParamsSchema,
   catalogQuerySchema,
+  trendingQuerySchema,
 } from "./video.schema";
 import {
   initUploadSession,
@@ -29,8 +30,9 @@ import {
   VideoNotFoundError,
   VideoNotFailedError,
   RawFileNotAvailableError,
+  getVideoDetail,
+  getTrendingVideos,
 } from "./video.service";
-import { get } from "https";
 
 export const videoController = new Elysia({ prefix: "/videos" })
     // ===== ROUTE PUBLIK (butuh login biasa, bukan admin — proteksi
@@ -51,7 +53,33 @@ export const videoController = new Elysia({ prefix: "/videos" })
       },
       { query: catalogQuerySchema }
     )
-      // ===== ROUTE ADMIN-ONLY (upload, manage) =====
+    .get(
+      "/trending",
+      async ({ query }) => {
+        const videos = await getTrendingVideos(query.limit ?? 10);
+        return { videos };
+      },
+      { query: trendingQuerySchema }
+    )
+    .get(
+      "/:id",
+      async ({ params, set }) => {
+        try {
+          const video = await getVideoDetail(params.id);
+          return { video };
+        } catch (error) {
+          if (error instanceof VideoNotFoundError) {
+            set.status = 404;
+            return { message: error.message };
+          }
+
+          set.status = 500;
+          return { message: "Terjadi kesalahan pada server" };
+        }
+      },
+      { params: videoIdParamsSchema }
+    )
+    // ===== ROUTE ADMIN-ONLY (upload, manage) =====
     .use(requireAdmin)
     .post(
         "/upload/init",

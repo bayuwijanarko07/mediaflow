@@ -95,3 +95,15 @@ export interface VideoCatalogResponse {
     totalPages: number;
   };
 }
+
+export interface VideoDetail {
+  id: string;
+  title: string;
+  description: string | null;
+  thumbnailUrl: string | null;
+  durationSec: number | null;
+  viewCount: number;
+  status: string;
+  genres: string[];
+  createdAt: string;
+}

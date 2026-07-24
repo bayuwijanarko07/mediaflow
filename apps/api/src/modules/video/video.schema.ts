@@ -32,4 +32,8 @@ export const catalogQuerySchema = t.Object({
   search: t.Optional(t.String()),
 });
 
+export const trendingQuerySchema = t.Object({
+  limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, default: 10 })),
+})
+
 export type InitUploadBody = typeof initUploadBodySchema.static;

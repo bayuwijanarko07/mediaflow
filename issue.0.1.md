@@ -535,9 +535,9 @@ Kalau FFmpeg gagal (file corrupt, format tidak didukung, dll), job di-mark `FAIL
 List video dengan pagination, filter genre, dan search judul dasar.
 
 **Acceptance Criteria:**
-- [ ] Hanya video dengan status `READY` yang muncul di katalog publik
-- [ ] Support query param: `page`, `limit`, `genre`, `search`
-- [ ] Response termasuk `thumbnailUrl`, `title`, `duration`, genre
+- [x] Hanya video dengan status `READY` yang muncul di katalog publik
+- [x] Support query param: `page`, `limit`, `genre`, `search`
+- [x] Response termasuk `thumbnailUrl`, `title`, `duration`, genre
 
 ---
 

@@ -108,3 +108,75 @@ export async function retryVideoTranscoding(videoId: string): Promise<void> {
     rawFilePath: video.rawFileKey,
   });
 }
+
+/**
+ * Ambil detail 1 video untuk halaman detail publik. Hanya video
+ * berstatus READY yang bisa diakses — video yang masih diproses
+ * atau gagal dianggap "tidak ada" dari sudut pandang publik.
+ */
+export async function getVideoDetail(videoId: string) {
+  const video = await prisma.video.findFirst({
+    where: { id: videoId, status: "READY" },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      thumbnailUrl: true,
+      durationSec: true,
+      viewCount: true,
+      status: true,
+      createdAt: true,
+      genres: {
+        select: { genre: { select: { name: true } } },
+      },
+    },
+  });
+
+  if (!video) {
+    throw new VideoNotFoundError();
+  }
+
+  return {
+    id: video.id,
+    title: video.title,
+    description: video.description,
+    thumbnailUrl: video.thumbnailUrl,
+    durationSec: video.durationSec,
+    viewCount: video.viewCount,
+    status: video.status,
+    genres: video.genres.map((g) => g.genre.name),
+    createdAt: video.createdAt.toISOString(),
+  };
+}
+
+/**
+ * Ambil video dengan viewCount tertinggi, hanya yang READY.
+ */
+export async function getTrendingVideos(limit: number) {
+  const videos = await prisma.video.findMany({
+    where: { status: "READY" },
+    orderBy: { viewCount: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      thumbnailUrl: true,
+      durationSec: true,
+      viewCount: true,
+      createdAt: true,
+      genres: {
+        select: { genre: { select: { name: true } } },
+      },
+    },
+  });
+
+  return videos.map((video) => ({
+    id: video.id,
+    title: video.title,
+    thumbnailUrl: video.thumbnailUrl,
+    durationSec: video.durationSec,
+    viewCount: video.viewCount,
+    genres: video.genres.map((g) => g.genre.name),
+    createdAt: video.createdAt.toISOString(),
+  }));
+}
