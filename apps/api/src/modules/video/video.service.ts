@@ -1,6 +1,6 @@
 import { prisma } from "@mediaflow/database";
 import { transcodeQueue } from "../../lib/queue";
-import { pathExists } from "@mediaflow/storage";
+import { getStoragePath, readFile, pathExists } from "@mediaflow/storage";
 
 export async function createVideoRecord(params: {
   title: string;
@@ -179,4 +179,106 @@ export async function getTrendingVideos(limit: number) {
     genres: video.genres.map((g) => g.genre.name),
     createdAt: video.createdAt.toISOString(),
   }));
+}
+
+export class VideoNotReadyError extends Error {
+  constructor() {
+    super("Video belum siap ditonton");
+    this.name = "VideoNotReadyError";
+  }
+}
+
+export class PlaybackFileNotFoundError extends Error {
+  constructor() {
+    super("File tidak ditemukan");
+    this.name = "PlaybackFileNotFoundError";
+  }
+}
+
+/**
+ * Validasi video ada & statusnya READY, sekaligus increment viewCount.
+ * Dipanggil sekali di awal sesi playback (bukan di setiap request segment,
+ * supaya viewCount tidak membengkak absurd tiap kali browser minta 1 segment).
+ */
+export async function initPlaybackSession(videoId: string): Promise<{ masterPlaylistUrl: string }> {
+  const video = await prisma.video.findFirst({
+    where: { id: videoId, status: "READY" },
+  });
+
+  if (!video) {
+    throw new VideoNotReadyError();
+  }
+
+  await prisma.video.update({
+    where: { id: videoId },
+    data: { viewCount: { increment: 1 } },
+  });
+
+  return {
+    masterPlaylistUrl: `/videos/${videoId}/playback/master.m3u8`,
+  };
+}
+
+/**
+ * Serve file master playlist. Validasi video harus READY (sama seperti
+ * initPlaybackSession) — supaya endpoint file individual ini juga tidak
+ * bisa diakses untuk video yang belum/tidak siap, meski uploadId-nya "ketebak".
+ */
+export async function getMasterPlaylistFile(videoId: string) {
+  const video = await prisma.video.findFirst({
+    where: { id: videoId, status: "READY" },
+  });
+
+  if (!video) {
+    throw new VideoNotReadyError();
+  }
+
+  const filePath = getStoragePath("hls", videoId, "master.m3u8");
+
+  if (!pathExists(filePath)) {
+    throw new PlaybackFileNotFoundError();
+  }
+
+  return readFile(filePath);
+}
+
+/**
+ * Serve file rendition playlist ATAU segment .ts, tergantung nama file
+ * yang diminta. Validasi KETAT terhadap format rendition & filename
+ * untuk mencegah path traversal (misal rendition="../../../etc" atau
+ * filename="../../secret.txt") — hanya pola yang dikenal yang diizinkan.
+ */
+export async function getRenditionFile(params: {
+  videoId: string;
+  rendition: string;
+  filename: string;
+}) {
+  const video = await prisma.video.findFirst({
+    where: { id: params.videoId, status: "READY" },
+  });
+
+  if (!video) {
+    throw new VideoNotReadyError();
+  }
+
+  // Validasi ketat: rendition cuma boleh format standar (1080p, 720p, dst)
+  if (!/^\d{3,4}p$/.test(params.rendition)) {
+    throw new PlaybackFileNotFoundError();
+  }
+
+  // Validasi ketat: filename cuma boleh "playlist.m3u8" atau "segment_XXX.ts"
+  const isValidPlaylist = params.filename === "playlist.m3u8";
+  const isValidSegment = /^segment_\d{3,}\.ts$/.test(params.filename);
+
+  if (!isValidPlaylist && !isValidSegment) {
+    throw new PlaybackFileNotFoundError();
+  }
+
+  const filePath = getStoragePath("hls", params.videoId, params.rendition, params.filename);
+
+  if (!pathExists(filePath)) {
+    throw new PlaybackFileNotFoundError();
+  }
+
+  return readFile(filePath);
 }

@@ -36,4 +36,10 @@ export const trendingQuerySchema = t.Object({
   limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, default: 10 })),
 })
 
+export const playbackFileParamsSchema = t.Object({
+  id: t.String(),
+  rendition: t.String(),
+  filename: t.String(),
+});
+
 export type InitUploadBody = typeof initUploadBodySchema.static;

@@ -547,9 +547,9 @@ List video dengan pagination, filter genre, dan search judul dasar.
 Detail 1 video lengkap, dan list video trending berdasarkan `viewCount`.
 
 **Acceptance Criteria:**
-- [ ] `/videos/:id` return metadata lengkap + daftar genre
-- [ ] `/videos/trending` return video urut `viewCount` descending, limit dikonfigurasi (default 10)
-- [ ] Return 404 kalau video tidak ditemukan atau statusnya bukan `READY`
+- [x] `/videos/:id` return metadata lengkap + daftar genre
+- [x] `/videos/trending` return video urut `viewCount` descending, limit dikonfigurasi (default 10)
+- [x] Return 404 kalau video tidak ditemukan atau statusnya bukan `READY`
 
 ---
 
@@ -559,10 +559,10 @@ Detail 1 video lengkap, dan list video trending berdasarkan `viewCount`.
 Serve file `.m3u8`/`.ts` lewat endpoint API (bukan static file expose langsung), supaya tetap ada pengecekan auth di tiap request segmen.
 
 **Acceptance Criteria:**
-- [ ] Protected `requireAuth`
-- [ ] Return master playlist dengan path rendition yang benar
-- [ ] Segment `.ts` individual juga diserve lewat endpoint yang tervalidasi auth (bukan folder publik)
-- [ ] `viewCount` di-increment saat pertama kali video diakses (bisa via endpoint terpisah atau logic sederhana di sini)
+- [x] Protected `requireAuth`
+- [x] Return master playlist dengan path rendition yang benar
+- [x] Segment `.ts` individual juga diserve lewat endpoint yang tervalidasi auth (bukan folder publik)
+- [x] `viewCount` di-increment saat pertama kali video diakses (bisa via endpoint terpisah atau logic sederhana di sini)
 
 ---
 

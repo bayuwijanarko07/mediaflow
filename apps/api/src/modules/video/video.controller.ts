@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { requireAdmin } from "../../modules/auth/admin.middleware";
+import { requireAuth } from "../../middleware/auth.middleware";
 import {
   initUploadBodySchema,
   chunkParamsSchema,
@@ -8,6 +9,7 @@ import {
   videoIdParamsSchema,
   catalogQuerySchema,
   trendingQuerySchema,
+  playbackFileParamsSchema,
 } from "./video.schema";
 import {
   initUploadSession,
@@ -32,6 +34,11 @@ import {
   RawFileNotAvailableError,
   getVideoDetail,
   getTrendingVideos,
+  initPlaybackSession,
+  getMasterPlaylistFile,
+  getRenditionFile,
+  VideoNotReadyError,
+  PlaybackFileNotFoundError,
 } from "./video.service";
 
 export const videoController = new Elysia({ prefix: "/videos" })
@@ -78,6 +85,71 @@ export const videoController = new Elysia({ prefix: "/videos" })
         }
       },
       { params: videoIdParamsSchema }
+    )
+    .use(requireAuth)
+    .get(
+      "/:id/playback",
+      async ({ params, set }) => {
+        try {
+          const result = await initPlaybackSession(params.id);
+          return result;
+        } catch (error) {
+          if (error instanceof VideoNotReadyError) {
+            set.status = 404;
+            return { message: error.message };
+          }
+          set.status = 500;
+          return { message: "Terjadi kesalahan pada server" };
+        }
+      },
+      { params: videoIdParamsSchema }
+    )
+    .get(
+      "/:id/playback/master.m3u8",
+      async ({ params, set }) => {
+        try {
+          const file = await getMasterPlaylistFile(params.id);
+          return new Response(file, {
+            headers: { "Content-Type": "application/vnd.apple.mpegurl" },
+          });
+        } catch (error) {
+          if (error instanceof VideoNotReadyError || error instanceof PlaybackFileNotFoundError) {
+            set.status = 404;
+            return { message: error.message };
+          }
+          set.status = 500;
+          return { message: "Terjadi kesalahan pada server" };
+        }
+      },
+      { params: videoIdParamsSchema }
+    )
+    .get(
+      "/:id/playback/:rendition/:filename",
+      async ({ params, set }) => {
+        try {
+          const file = await getRenditionFile({
+            videoId: params.id,
+            rendition: params.rendition,
+            filename: params.filename,
+          });
+
+          const contentType = params.filename.endsWith(".m3u8")
+            ? "application/vnd.apple.mpegurl"
+            : "video/mp2t"; // MIME type untuk file .ts
+
+          return new Response(file, {
+            headers: { "Content-Type": contentType },
+          });
+        } catch (error) {
+          if (error instanceof VideoNotReadyError || error instanceof PlaybackFileNotFoundError) {
+            set.status = 404;
+            return { message: error.message };
+          }
+          set.status = 500;
+          return { message: "Terjadi kesalahan pada server" };
+        }
+      },
+      { params: playbackFileParamsSchema }
     )
     // ===== ROUTE ADMIN-ONLY (upload, manage) =====
     .use(requireAdmin)
