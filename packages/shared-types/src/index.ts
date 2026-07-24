@@ -107,3 +107,7 @@ export interface VideoDetail {
   genres: string[];
   createdAt: string;
 }
+
+export interface PlaybackInitResponse {
+  masterPlaylistUrl: string;
+}

@@ -572,9 +572,9 @@ Serve file `.m3u8`/`.ts` lewat endpoint API (bukan static file expose langsung),
 Halaman detail video dengan player HLS.js yang load master playlist dari endpoint playback.
 
 **Acceptance Criteria:**
-- [ ] Player otomatis pilih HLS.js untuk Chrome/Firefox, native `<video>` untuk Safari
-- [ ] Adaptive bitrate switching bekerja (bisa diverifikasi lewat network throttling di DevTools)
-- [ ] Player kirim `Authorization` header saat request segmen (karena endpoint playback protected)
+- [x] Player otomatis pilih HLS.js untuk Chrome/Firefox, native `<video>` untuk Safari
+- [x] Adaptive bitrate switching bekerja (bisa diverifikasi lewat network throttling di DevTools)
+- [x] Player kirim `Authorization` header saat request segmen (karena endpoint playback protected)
 
 ---
 
