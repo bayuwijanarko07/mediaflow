@@ -5,7 +5,8 @@ import {
   chunkParamsSchema,
   uploadStatusParamsSchema,
   completeUploadParamsSchema,
-  videoIdParamsSchema
+  videoIdParamsSchema,
+  catalogQuerySchema,
 } from "./video.schema";
 import {
   initUploadSession,
@@ -18,6 +19,7 @@ import {
   UploadSessionNotFoundError,
   InvalidChunkIndexError,
   IncompleteUploadError,
+  getVideoCatalog,
 } from "./upload.service";
 import { 
   createVideoRecord,
@@ -31,6 +33,25 @@ import {
 import { get } from "https";
 
 export const videoController = new Elysia({ prefix: "/videos" })
+    // ===== ROUTE PUBLIK (butuh login biasa, bukan admin — proteksi
+    // penuh via requireAuth akan ditambahkan di Issue #47 untuk playback,
+    // untuk katalog sendiri di v1 ini dibiarkan bisa diakses siapa saja
+    // yang sudah login, tanpa perlu requireAdmin) =====
+    .get(
+      "/",
+      async ({ query }) => {
+        const result = await getVideoCatalog({
+          page: query.page ?? 1,
+          limit: query.limit ?? 20,
+          genre: query.genre,
+          search: query.search,
+        });
+
+        return result;
+      },
+      { query: catalogQuerySchema }
+    )
+      // ===== ROUTE ADMIN-ONLY (upload, manage) =====
     .use(requireAdmin)
     .post(
         "/upload/init",

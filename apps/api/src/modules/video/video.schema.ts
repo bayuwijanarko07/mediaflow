@@ -25,4 +25,11 @@ export const videoIdParamsSchema = t.Object({
   id: t.String(),
 });
 
+export const catalogQuerySchema = t.Object({
+  page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
+  limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, default: 20 })),
+  genre: t.Optional(t.String()),
+  search: t.Optional(t.String()),
+});
+
 export type InitUploadBody = typeof initUploadBodySchema.static;

@@ -1,6 +1,7 @@
 import { redis } from "../../lib/redis";
 import { getStoragePath, saveFile, readFile, deleteDirectory } from "@mediaflow/storage";
 import { extname } from "node:path";
+import { prisma, Prisma } from "@mediaflow/database";
 import {
   CHUNK_SIZE_BYTES,
   MAX_FILE_SIZE_BYTES,
@@ -255,4 +256,75 @@ export async function assembleChunks(params: {
 export async function deleteUploadSession(uploadId: string): Promise<void> {
   await redis.del(getSessionKey(uploadId));
   await redis.del(getReceivedChunksKey(uploadId));
+}
+
+export async function getVideoCatalog(params: {
+  page: number;
+  limit: number;
+  genre?: string;
+  search?: string;
+}) {
+  const skip = (params.page - 1) * params.limit;
+
+  // Bangun kondisi where secara dinamis — hanya tambahkan filter
+  // yang benar-benar diberikan, supaya query tetap efisien
+  const where: Prisma.VideoWhereInput = {
+    status: "READY", // WAJIB: cuma video siap tonton yang muncul di katalog publik
+  };
+
+  if (params.search) {
+    where.title = {
+      contains: params.search,
+      mode: "insensitive", // pencarian case-insensitive
+    };
+  }
+
+  if (params.genre) {
+    where.genres = {
+      some: {
+        genre: { name: { equals: params.genre, mode: "insensitive" } },
+      },
+    };
+  }
+
+  const [videos, totalItems] = await Promise.all([
+    prisma.video.findMany({
+      where,
+      skip,
+      take: params.limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        thumbnailUrl: true,
+        durationSec: true,
+        viewCount: true,
+        createdAt: true,
+        genres: {
+          select: {
+            genre: { select: { name: true } },
+          },
+        },
+      },
+    }),
+    prisma.video.count({ where }),
+  ]);
+
+  return {
+    videos: videos.map((video) => ({
+      id: video.id,
+      title: video.title,
+      thumbnailUrl: video.thumbnailUrl,
+      durationSec: video.durationSec,
+      viewCount: video.viewCount,
+      genres: video.genres.map((g) => g.genre.name),
+      createdAt: video.createdAt.toISOString(),
+    })),
+    pagination: {
+      page: params.page,
+      limit: params.limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / params.limit),
+    },
+  };
 }

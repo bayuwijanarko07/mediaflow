@@ -75,3 +75,23 @@ export interface Genre {
 export interface GenreListResponse {
   genres: Genre[];
 }
+
+export interface VideoCatalogItem {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+  durationSec: number | null;
+  viewCount: number;
+  genres: string[];
+  createdAt: string;
+}
+
+export interface VideoCatalogResponse {
+  videos: VideoCatalogItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}
