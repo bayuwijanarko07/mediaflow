@@ -596,9 +596,9 @@ Simpan & ambil posisi tontonan terakhir per user per video, untuk fitur "Lanjutk
 Player kirim event `timeupdate` ke backend tiap ~15 detik, dan set posisi awal video dari progress tersimpan.
 
 **Acceptance Criteria:**
-- [ ] Progress terkirim otomatis tanpa mengganggu playback (debounced/throttled, bukan tiap frame)
-- [ ] Saat buka video yang sudah pernah ditonton, `video.currentTime` otomatis diset ke posisi terakhir
-- [ ] Halaman "Lanjutkan Menonton" di beranda menampilkan list dari `/me/watch-history`
+- [x] Progress terkirim otomatis tanpa mengganggu playback (debounced/throttled, bukan tiap frame)
+- [x] Saat buka video yang sudah pernah ditonton, `video.currentTime` otomatis diset ke posisi terakhir
+- [x] Halaman "Lanjutkan Menonton" di beranda menampilkan list dari `/me/watch-history`
 
 ---
 

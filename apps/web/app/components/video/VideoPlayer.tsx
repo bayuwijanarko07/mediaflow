@@ -130,8 +130,9 @@ export function VideoPlayer({
     let lastReported = 0;
     const handleTimeUpdate = () => {
       const current = Math.floor(videoElement.currentTime);
-      // Throttle: laporkan cuma tiap perubahan >= 5 detik, bukan tiap frame
-      if (Math.abs(current - lastReported) >= 5) {
+      // Throttle: laporkan cuma tiap ~15 detik (sesuai PRD #50), bukan tiap frame — 
+      // supaya tidak membanjiri backend dengan request watch-progress
+      if (Math.abs(current - lastReported) >= 15) {
         lastReported = current;
         onTimeUpdate(current);
       }
