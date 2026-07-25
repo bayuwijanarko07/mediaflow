@@ -584,9 +584,9 @@ Halaman detail video dengan player HLS.js yang load master playlist dari endpoin
 Simpan & ambil posisi tontonan terakhir per user per video, untuk fitur "Lanjutkan Menonton".
 
 **Acceptance Criteria:**
-- [ ] `POST /videos/:id/watch-progress` upsert `WatchHistory` (`progressSec`, `completed` kalau sudah nonton >95%)
-- [ ] `GET /me/watch-history` return list video yang pernah ditonton, urut `lastWatchedAt` terbaru
-- [ ] Protected `requireAuth`, hanya bisa akses history milik sendiri
+- [x] `POST /videos/:id/watch-progress` upsert `WatchHistory` (`progressSec`, `completed` kalau sudah nonton >95%)
+- [x] `GET /me/watch-history` return list video yang pernah ditonton, urut `lastWatchedAt` terbaru
+- [x] Protected `requireAuth`, hanya bisa akses history milik sendiri
 
 ---
 

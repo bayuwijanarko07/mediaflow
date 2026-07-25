@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { requireAdmin } from "../../modules/auth/admin.middleware";
 import { requireAuth } from "../../middleware/auth.middleware";
+import { watchProgressBodySchema } from "./video.schema";
 import {
   initUploadBodySchema,
   chunkParamsSchema,
@@ -39,6 +40,7 @@ import {
   getRenditionFile,
   VideoNotReadyError,
   PlaybackFileNotFoundError,
+  upsertWatchProgress,
 } from "./video.service";
 
 export const videoController = new Elysia({ prefix: "/videos" })
@@ -150,6 +152,32 @@ export const videoController = new Elysia({ prefix: "/videos" })
         }
       },
       { params: playbackFileParamsSchema }
+    )
+    .post(
+      "/:id/watch-progress",
+      async ({ params, body, userId, set }) => {
+        try {
+          const result = await upsertWatchProgress({
+            userId,
+            videoId: params.id,
+            progressSec: body.progressSec,
+          });
+
+          return {
+            message: "Progress tersimpan",
+            progressSec: result.progressSec,
+            completed: result.completed,
+          };
+        } catch (error) {
+          if (error instanceof VideoNotFoundError) {
+            set.status = 404;
+            return { message: error.message };
+          }
+          set.status = 500;
+          return { message: "Terjadi kesalahan pada server" };
+        }
+      },
+      { params: videoIdParamsSchema, body: watchProgressBodySchema }
     )
     // ===== ROUTE ADMIN-ONLY (upload, manage) =====
     .use(requireAdmin)

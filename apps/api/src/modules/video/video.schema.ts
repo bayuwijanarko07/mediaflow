@@ -43,3 +43,9 @@ export const playbackFileParamsSchema = t.Object({
 });
 
 export type InitUploadBody = typeof initUploadBodySchema.static;
+
+export const watchProgressBodySchema = t.Object({
+  progressSec: t.Number({ minimum: 0, error: "progressSec harus angka >= 0" }),
+});
+
+export type WatchProgressBody = typeof watchProgressBodySchema.static;

@@ -111,3 +111,23 @@ export interface VideoDetail {
 export interface PlaybackInitResponse {
   masterPlaylistUrl: string;
 }
+
+export interface WatchHistoryItem {
+  videoId: string;
+  title: string;
+  thumbnailUrl: string | null;
+  durationSec: number | null;
+  progressSec: number;
+  completed: boolean;
+  lastWatchedAt: string;
+}
+
+export interface WatchHistoryResponse {
+  history: WatchHistoryItem[];
+}
+
+export interface WatchProgressResponse {
+  message: string;
+  progressSec: number;
+  completed: boolean;
+}

@@ -282,3 +282,78 @@ export async function getRenditionFile(params: {
 
   return readFile(filePath);
 }
+
+// Threshold: video dianggap "selesai ditonton" kalau progress >= 95% durasi
+const WATCH_COMPLETED_THRESHOLD = 0.95;
+
+/**
+ * Upsert posisi tontonan user untuk 1 video. Hanya video READY yang
+ * boleh disimpan progress-nya (video yang sudah dihapus/belum siap
+ * dianggap tidak valid untuk di-track).
+ */
+export async function upsertWatchProgress(params: {
+  userId: string;
+  videoId: string;
+  progressSec: number;
+}) {
+  const video = await prisma.video.findFirst({
+    where: { id: params.videoId, status: "READY" },
+  });
+
+  if (!video) {
+    throw new VideoNotFoundError();
+  }
+
+  // Kalau durationSec belum diketahui (edge case), jangan tandai completed
+  const completed = video.durationSec
+    ? params.progressSec >= video.durationSec * WATCH_COMPLETED_THRESHOLD
+    : false;
+
+  const watchHistory = await prisma.watchHistory.upsert({
+    where: {
+      userId_videoId: { userId: params.userId, videoId: params.videoId },
+    },
+    update: { progressSec: params.progressSec, completed },
+    create: {
+      userId: params.userId,
+      videoId: params.videoId,
+      progressSec: params.progressSec,
+      completed,
+    },
+  });
+
+  return watchHistory;
+}
+
+/**
+ * Ambil riwayat tontonan 1 user, urut dari terakhir ditonton.
+ * Video yang statusnya sudah bukan READY lagi (dihapus/gagal) disaring
+ * keluar — dari sudut pandang "Lanjutkan Menonton", video itu sudah
+ * tidak relevan untuk ditampilkan.
+ */
+export async function getUserWatchHistory(userId: string) {
+  const history = await prisma.watchHistory.findMany({
+    where: { userId, video: { status: "READY" } },
+    orderBy: { lastWatchedAt: "desc" },
+    include: {
+      video: {
+        select: {
+          id: true,
+          title: true,
+          thumbnailUrl: true,
+          durationSec: true,
+        },
+      },
+    },
+  });
+
+  return history.map((entry) => ({
+    videoId: entry.video.id,
+    title: entry.video.title,
+    thumbnailUrl: entry.video.thumbnailUrl,
+    durationSec: entry.video.durationSec,
+    progressSec: entry.progressSec,
+    completed: entry.completed,
+    lastWatchedAt: entry.lastWatchedAt.toISOString(),
+  }));
+}
