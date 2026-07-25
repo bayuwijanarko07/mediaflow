@@ -1,6 +1,11 @@
+import { t } from "elysia";
 import { Elysia } from "elysia";
 import { prisma } from "@mediaflow/database";
 import { requireAdmin } from "../../modules/auth/admin.middleware";
+
+const createGenreBodySchema = t.Object({
+  name: t.String({ minLength: 1, error: "Nama genre wajib diisi" }),
+});
 
 export const genreController = new Elysia({ prefix: "/genres" })
   .get("/", async () => {
@@ -20,4 +25,4 @@ export const genreController = new Elysia({ prefix: "/genres" })
     const genre = await prisma.genre.create({ data: { name } });
     set.status = 201;
     return { genre };
-  });
+  }, { body: createGenreBodySchema });

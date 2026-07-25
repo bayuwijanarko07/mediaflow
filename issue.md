@@ -608,9 +608,9 @@ Player kirim event `timeupdate` ke backend tiap ~15 detik, dan set posisi awal v
 `PATCH /admin/videos/:id`, `DELETE /admin/videos/:id`, dan CRUD dasar untuk `Genre`.
 
 **Acceptance Criteria:**
-- [ ] Update judul/deskripsi/genre video
-- [ ] Delete video: hapus record + hapus folder `hls/{videoId}/` dari disk (bukan cuma soft delete di database)
-- [ ] Endpoint `GET/POST /genres` untuk kelola daftar genre
+- [x] Update judul/deskripsi/genre video
+- [x] Delete video: hapus record + hapus folder `hls/{videoId}/` dari disk (bukan cuma soft delete di database)
+- [x] Endpoint `GET/POST /genres` untuk kelola daftar genre
 
 ---
 

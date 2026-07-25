@@ -49,3 +49,11 @@ export const watchProgressBodySchema = t.Object({
 });
 
 export type WatchProgressBody = typeof watchProgressBodySchema.static;
+
+export const updateVideoBodySchema = t.Object({
+  title: t.Optional(t.String({ minLength: 1, error: "Judul tidak boleh kosong" })),
+  description: t.Optional(t.String()),
+  genreIds: t.Optional(t.Array(t.String())),
+});
+
+export type UpdateVideoBody = typeof updateVideoBodySchema.static;

@@ -11,6 +11,7 @@ import {
   catalogQuerySchema,
   trendingQuerySchema,
   playbackFileParamsSchema,
+  updateVideoBodySchema,
 } from "./video.schema";
 import {
   initUploadSession,
@@ -41,6 +42,8 @@ import {
   VideoNotReadyError,
   PlaybackFileNotFoundError,
   upsertWatchProgress,
+  updateVideoMetadata,
+  deleteVideoWithFiles,
 } from "./video.service";
 
 export const videoController = new Elysia({ prefix: "/videos" })
@@ -385,4 +388,48 @@ export const videoController = new Elysia({ prefix: "/videos" })
       }
     },
     { params: videoIdParamsSchema }
+    )
+    .patch(
+      "/admin/:id",
+      async ({ params, body, set }) => {
+        try {
+          const video = await updateVideoMetadata({
+            videoId: params.id,
+            title: body.title,
+            description: body.description,
+            genreIds: body.genreIds,
+          });
+
+          return { message: "Metadata video berhasil diupdate", video };
+        } catch (error) {
+          if (error instanceof VideoNotFoundError) {
+            set.status = 404;
+            return { message: error.message };
+          }
+
+          set.status = 500;
+          return { message: "Terjadi kesalahan pada server" };
+        }
+      },
+      { params: videoIdParamsSchema, body: updateVideoBodySchema }
+    )
+    .delete(
+      "/admin/:id",
+      async ({ params, set }) => {
+        try {
+          await deleteVideoWithFiles(params.id);
+
+          set.status = 200;
+          return { message: "Video berhasil dihapus" };
+        } catch (error) {
+          if (error instanceof VideoNotFoundError) {
+            set.status = 404;
+            return { message: error.message };
+          }
+
+          set.status = 500;
+          return { message: "Terjadi kesalahan pada server" };
+        }
+      },
+      { params: videoIdParamsSchema }
     );

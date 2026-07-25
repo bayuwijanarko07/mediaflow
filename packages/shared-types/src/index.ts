@@ -131,3 +131,18 @@ export interface WatchProgressResponse {
   progressSec: number;
   completed: boolean;
 }
+
+export interface UpdateVideoResponse {
+  message: string;
+  video: {
+    id: string;
+    title: string;
+    description: string | null;
+    status: string;
+    genres: string[];
+  };
+}
+
+export interface DeleteVideoResponse {
+  message: string;
+}

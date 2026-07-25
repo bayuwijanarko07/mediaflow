@@ -1,6 +1,6 @@
 import { prisma } from "@mediaflow/database";
 import { transcodeQueue } from "../../lib/queue";
-import { getStoragePath, readFile, pathExists } from "@mediaflow/storage";
+import { getStoragePath, readFile, pathExists, deleteFile, deleteDirectory } from "@mediaflow/storage";
 
 export async function createVideoRecord(params: {
   title: string;
@@ -356,4 +356,82 @@ export async function getUserWatchHistory(userId: string) {
     completed: entry.completed,
     lastWatchedAt: entry.lastWatchedAt.toISOString(),
   }));
+}
+
+// (Catatan: getStoragePath & deleteDirectory sudah di-import di bagian atas file
+// dari @mediaflow/storage — cukup pakai yang sudah ada, tidak perlu import ulang.
+// Baris di atas hanya ilustrasi; di file asli cukup gunakan `getStoragePath`
+// dan `deleteDirectory` yang sudah diimpor di baris pertama file ini.)
+
+/**
+ * Update metadata video (judul, deskripsi, genre). Genre di-replace
+ * total (bukan merge) — kalau genreIds dikirim, semua relasi genre lama
+ * dihapus dan diganti dengan yang baru, supaya perilakunya predictable
+ * dari sudut pandang admin (WYSIWYG: apa yang dikirim itu yang jadi hasil akhir).
+ */
+export async function updateVideoMetadata(params: {
+  videoId: string;
+  title?: string;
+  description?: string;
+  genreIds?: string[];
+}) {
+  const video = await prisma.video.findUnique({ where: { id: params.videoId } });
+
+  if (!video) {
+    throw new VideoNotFoundError();
+  }
+
+  const updated = await prisma.video.update({
+    where: { id: params.videoId },
+    data: {
+      title: params.title,
+      description: params.description,
+      genres: params.genreIds
+        ? {
+            deleteMany: {}, // hapus semua relasi VideoGenre lama untuk video ini
+            create: params.genreIds.map((genreId) => ({ genreId })),
+          }
+        : undefined,
+    },
+    include: {
+      genres: { select: { genre: { select: { name: true } } } },
+    },
+  });
+
+  return {
+    id: updated.id,
+    title: updated.title,
+    description: updated.description,
+    status: updated.status,
+    genres: updated.genres.map((g) => g.genre.name),
+  };
+}
+
+/**
+ * Hapus video: record database + seluruh file terkait di disk.
+ * Bukan cuma soft delete — folder hls/{videoId}/ dan raw file (kalau
+ * masih ada, mis. video belum sempat selesai transcode) juga dihapus,
+ * sesuai AC. Urutan: hapus file dulu baru record, supaya kalau hapus
+ * file gagal, record masih ada untuk retry manual (bukan sebaliknya:
+ * record hilang tapi file "nyangkut" tak bisa ditemukan lagi).
+ */
+export async function deleteVideoWithFiles(videoId: string): Promise<void> {
+  const video = await prisma.video.findUnique({ where: { id: videoId } });
+
+  if (!video) {
+    throw new VideoNotFoundError();
+  }
+
+  // Hapus folder hasil transcoding (kalau ada)
+  await deleteDirectory(getStoragePath("hls", videoId));
+
+  // Hapus raw file kalau masih tersisa (mis. video FAILED yang belum
+  // pernah berhasil transcode, rawFileKey masih menunjuk file asli)
+  if (video.rawFileKey) {
+    await deleteFile(video.rawFileKey);
+  }
+
+  // Prisma cascade akan otomatis menghapus VideoRendition, TranscodeJob,
+  // VideoGenre, dan WatchHistory terkait (lihat onDelete: Cascade di schema)
+  await prisma.video.delete({ where: { id: videoId } });
 }
