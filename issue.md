@@ -620,9 +620,9 @@ Player kirim event `timeupdate` ke backend tiap ~15 detik, dan set posisi awal v
 Halaman utama menampilkan grid video, filter genre, search bar.
 
 **Acceptance Criteria:**
-- [ ] Grid video dengan thumbnail, judul, durasi
-- [ ] Filter genre & search terhubung ke query param backend (`/videos`)
-- [ ] Section "Trending" dan "Lanjutkan Menonton" di halaman utama
+- [x] Grid video dengan thumbnail, judul, durasi
+- [x] Filter genre & search terhubung ke query param backend (`/videos`)
+- [x] Section "Trending" dan "Lanjutkan Menonton" di halaman utama
 
 ---
 

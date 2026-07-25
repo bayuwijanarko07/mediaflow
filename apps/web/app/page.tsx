@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { LogoutButton } from "@/app/components/auth/LogoutButton";
 import { ContinueWatchingSection } from "@/app/components/video/ContinueWatchingSection";
+import { TrendingSection } from "@/app/components/video/TrendingSection";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -24,7 +25,13 @@ export default function HomePage() {
           <p>Role: {user?.role}</p>
           <p>Halo, {user?.name ?? user?.email}!</p>
           <LogoutButton />
+          <p className="mt-4">
+            <Link href="/videos" className="text-blue-600 hover:underline">
+              Lihat semua video →
+            </Link>
+          </p>
           <ContinueWatchingSection />
+          <TrendingSection />
         </>
       ) : (
         <div>
