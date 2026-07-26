@@ -632,10 +632,10 @@ Halaman utama menampilkan grid video, filter genre, search bar.
 Halaman khusus admin untuk lihat semua video beserta status transcoding, retry job gagal, edit/hapus video.
 
 **Acceptance Criteria:**
-- [ ] List semua video (termasuk yang belum `READY`) dengan status jelas (`UPLOADING`/`PROCESSING`/`READY`/`FAILED`)
-- [ ] Progress bar transcoding per video (polling status berkala)
-- [ ] Tombol retry untuk video berstatus `FAILED`
-- [ ] Tombol edit metadata & hapus video
+- [x] List semua video (termasuk yang belum `READY`) dengan status jelas (`UPLOADING`/`PROCESSING`/`READY`/`FAILED`)
+- [x] Progress bar transcoding per video (polling status berkala)
+- [x] Tombol retry untuk video berstatus `FAILED`
+- [x] Tombol edit metadata & hapus video
 
 ---
 

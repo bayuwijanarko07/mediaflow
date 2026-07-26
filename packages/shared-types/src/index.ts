@@ -146,3 +146,28 @@ export interface UpdateVideoResponse {
 export interface DeleteVideoResponse {
   message: string;
 }
+
+export interface AdminVideoListItem {
+  id: string;
+  title: string;
+  status: string;
+  thumbnailUrl: string | null;
+  durationSec: number | null;
+  viewCount: number;
+  createdAt: string;
+  latestJob: {
+    status: string;
+    progress: number;
+    errorMessage: string | null;
+  } | null;
+}
+
+export interface AdminVideoListResponse {
+  videos: AdminVideoListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}

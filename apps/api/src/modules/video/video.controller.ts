@@ -12,6 +12,7 @@ import {
   trendingQuerySchema,
   playbackFileParamsSchema,
   updateVideoBodySchema,
+  adminVideoListQuerySchema,
 } from "./video.schema";
 import {
   initUploadSession,
@@ -44,6 +45,7 @@ import {
   upsertWatchProgress,
   updateVideoMetadata,
   deleteVideoWithFiles,
+  getAdminVideoList,
 } from "./video.service";
 
 export const videoController = new Elysia({ prefix: "/videos" })
@@ -184,6 +186,19 @@ export const videoController = new Elysia({ prefix: "/videos" })
     )
     // ===== ROUTE ADMIN-ONLY (upload, manage) =====
     .use(requireAdmin)
+    .get(
+      "/admin",
+      async ({ query }) => {
+        const result = await getAdminVideoList({
+          page: query.page ?? 1,
+          limit: query.limit ?? 20,
+          status: query.status,
+        });
+
+        return result;
+      },
+      { query: adminVideoListQuerySchema }
+    )
     .post(
         "/upload/init",
         async ({ body, adminUser, set }) => {

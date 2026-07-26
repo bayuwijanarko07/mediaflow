@@ -57,3 +57,21 @@ export const updateVideoBodySchema = t.Object({
 });
 
 export type UpdateVideoBody = typeof updateVideoBodySchema.static;
+
+export const adminVideoListQuerySchema = t.Object({
+  page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
+  limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, default: 20 })),
+  status: t.Optional(
+    t.Union(
+      [
+        t.Literal("UPLOADING"),
+        t.Literal("UPLOADED"),
+        t.Literal("QUEUED"),
+        t.Literal("PROCESSING"),
+        t.Literal("READY"),
+        t.Literal("FAILED"),
+      ],
+      { error: "Status tidak valid" }
+    )
+  ),
+});

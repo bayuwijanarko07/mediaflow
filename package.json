@@ -11,6 +11,7 @@
     "dev:web": "bun run --cwd apps/web dev",
     "dev:worker": "bun run --cwd apps/worker dev",
     "test:api": "bun run --cwd apps/api test",
+    "test:web": "bun run --cwd apps/web test",
     "db:generate": "bun run --cwd packages/database generate",
     "db:migrate": "bun run --cwd packages/database migrate",
     "db:seed": "bun run --cwd packages/database seed"

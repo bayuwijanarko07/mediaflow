@@ -3,7 +3,6 @@
 import { ProtectedRoute } from "@/app/components/auth/ProtectedRoute";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { apiFetch } from "@/lib/api-client";
 
 interface VideoDetail {
   id: string;

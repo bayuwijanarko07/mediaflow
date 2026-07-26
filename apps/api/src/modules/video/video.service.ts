@@ -1,4 +1,4 @@
-import { prisma } from "@mediaflow/database";
+import { prisma,Prisma } from "@mediaflow/database";
 import { transcodeQueue } from "../../lib/queue";
 import { getStoragePath, readFile, pathExists, deleteFile, deleteDirectory } from "@mediaflow/storage";
 
@@ -370,11 +370,11 @@ export async function getUserWatchHistory(userId: string) {
  * dari sudut pandang admin (WYSIWYG: apa yang dikirim itu yang jadi hasil akhir).
  */
 export async function updateVideoMetadata(params: {
-  videoId: string;
-  title?: string;
-  description?: string;
-  genreIds?: string[];
-}) {
+    videoId: string;
+    title?: string;
+    description?: string;
+    genreIds?: string[];
+  }) {
   const video = await prisma.video.findUnique({ where: { id: params.videoId } });
 
   if (!video) {
@@ -434,4 +434,71 @@ export async function deleteVideoWithFiles(videoId: string): Promise<void> {
   // Prisma cascade akan otomatis menghapus VideoRendition, TranscodeJob,
   // VideoGenre, dan WatchHistory terkait (lihat onDelete: Cascade di schema)
   await prisma.video.delete({ where: { id: videoId } });
+}
+
+/**
+ * List SEMUA video (tanpa filter status) untuk dashboard admin —
+ * berbeda dari getVideoCatalog yang hanya menampilkan status READY.
+ * Admin perlu melihat video di semua status (UPLOADING/QUEUED/
+ * PROCESSING/READY/FAILED) untuk memonitor progress & menemukan yang gagal.
+ */
+export async function getAdminVideoList(params: {
+    page: number;
+    limit: number;
+    status?: string;
+  }) {
+  const skip = (params.page - 1) * params.limit;
+
+  const where: Prisma.VideoWhereInput = params.status
+  ? { status: params.status as any }
+  : {};
+
+  const [videos, totalItems] = await Promise.all([
+    prisma.video.findMany({
+      where,
+      skip,
+      take: params.limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        thumbnailUrl: true,
+        durationSec: true,
+        viewCount: true,
+        createdAt: true,
+        transcodeJobs: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { status: true, progress: true, errorMessage: true },
+        },
+      },
+    }),
+    prisma.video.count({ where }),
+  ]);
+
+  return {
+    videos: videos.map((video) => ({
+      id: video.id,
+      title: video.title,
+      status: video.status,
+      thumbnailUrl: video.thumbnailUrl,
+      durationSec: video.durationSec,
+      viewCount: video.viewCount,
+      createdAt: video.createdAt.toISOString(),
+      latestJob: video.transcodeJobs[0]
+        ? {
+            status: video.transcodeJobs[0].status,
+            progress: video.transcodeJobs[0].progress,
+            errorMessage: video.transcodeJobs[0].errorMessage,
+          }
+        : null,
+    })),
+    pagination: {
+      page: params.page,
+      limit: params.limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / params.limit),
+    },
+  };
 }
