@@ -286,6 +286,20 @@ UI logout yang memanggil endpoint logout dan membersihkan state lokal.
 
 ### #25 — Audit log aktivitas login (IP, device, waktu)
 **Label:** `feature`, `security`, `priority:low`
+**Deskripsi:**
+Catat setiap percobaan login (sukses maupun gagal) beserta metadata
+IP address, user agent (device/browser), dan waktu — supaya admin bisa
+mendeteksi pola login mencurigakan.
+
+**Acceptance Criteria:**
+- [x] Model `LoginAuditLog` menyimpan userId (nullable), email, success,
+    ipAddress, userAgent, createdAt
+- [x] Percobaan login sukses DAN gagal keduanya tercatat
+- [x] Kegagalan mencatat log tidak boleh menggagalkan proses login
+    (fail-safe, swallow error)
+- [x] Endpoint admin `GET /admin/audit/login-logs` (list + filter email/success)
+    dan `GET /admin/audit/login-logs/:userId` (riwayat 1 user), keduanya
+    `requireAdmin`
 
 ### #26 — CI pipeline: lint, typecheck, test untuk semua workspace
 **Label:** `infra`, `priority:medium`

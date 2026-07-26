@@ -3,6 +3,8 @@ import { jwtPlugin } from "../../plugins/jwt.plugin";
 import { registerBodySchema, loginBodySchema } from "./auth.schema";
 import { REFRESH_TOKEN_COOKIE_NAME } from "./auth.constants";
 import { authRateLimitPlugin } from "../../plugins/rate-limit.plugin";
+import { recordLoginAttempt } from "./audit-log.service";
+import { extractIpAddress, extractUserAgent } from "../../lib/request-metadata";
 import {
     registerUser,
     findUserByEmail,
@@ -12,7 +14,6 @@ import {
     revokeRefreshToken,
     getRefreshTokenMaxAgeSeconds,
     EmailAlreadyExistsError,
-    InvalidCredentialsError,
     getUserById,
     InvalidRefreshTokenError,
     revokeAllUserRefreshTokens,
@@ -44,49 +45,72 @@ export const authController = new Elysia({ prefix: "/auth" })
         )
         .post(
         "/login",
-        async ({ body, jwt, cookie, set }) => {
-        const user = await findUserByEmail(body.email);
+        async ({ body, jwt, cookie, set, request }) => {
+            const ipAddress = extractIpAddress(request);
+            const userAgent = extractUserAgent(request);
+            const user = await findUserByEmail(body.email);
 
-        if (!user) {
-            set.status = 401;
-            return { message: "Email atau password salah" };
-        }
+            if (!user) {
+                await recordLoginAttempt({
+                    email: body.email,
+                    success: false,
+                    ipAddress,
+                    userAgent
+                });
+                set.status = 401;
+                return { message: "Email atau password salah" };
+            }
 
-        const isPasswordValid = await verifyPassword(
-            body.password,
-            user.passwordHash
-        );
+            const isPasswordValid = await verifyPassword(
+                body.password,
+                user.passwordHash
+            );
 
-        if (!isPasswordValid) {
-            set.status = 401;
-            return { message: "Email atau password salah" };
-        }
+            if (!isPasswordValid) {
+                set.status = 401;
+                await recordLoginAttempt({
+                    email: body.email,
+                    success: false,
+                    userId: user.id,
+                    ipAddress,
+                    userAgent
+                });
+                return { message: "Email atau password salah" };
+            }
 
-        const accessToken = await jwt.sign({ sub: user.id });
-        const { token: refreshToken } = await createRefreshToken(user.id);
+            const accessToken = await jwt.sign({ sub: user.id });
+            const { token: refreshToken } = await createRefreshToken(user.id);
 
-        cookie.refresh_token.set({
-            value: refreshToken,
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            path: "/",
-            maxAge: getRefreshTokenMaxAgeSeconds(),
-        });
+            cookie.refresh_token.set({
+                value: refreshToken,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                path: "/",
+                maxAge: getRefreshTokenMaxAgeSeconds(),
+            });
 
-            return {
-                accessToken,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    isVerified: user.isVerified,
-                    role: user.role,
-                },
-            };
-        },
-            { body: loginBodySchema }
-        )
+                await recordLoginAttempt({
+                    email: body.email,
+                    success: true,
+                    userId: user.id,
+                    ipAddress,
+                    userAgent
+                });
+
+                return {
+                    accessToken,
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                        isVerified: user.isVerified,
+                        role: user.role,
+                    },
+                };
+            },
+                { body: loginBodySchema }
+            )
     )
     .post(
     "/refresh", 

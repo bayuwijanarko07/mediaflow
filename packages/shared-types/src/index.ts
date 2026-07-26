@@ -171,3 +171,23 @@ export interface AdminVideoListResponse {
     totalPages: number;
   };
 }
+
+export interface LoginAuditLogEntry {
+  id: string;
+  userId: string | null;
+  email: string;
+  success: boolean;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export interface LoginAuditLogListResponse {
+  logs: LoginAuditLogEntry[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}

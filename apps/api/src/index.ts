@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { corsPlugin } from "./plugins/cors.plugin";
 import { healthController } from "./modules/health/health.controller";
 import { authController } from "./modules/auth/auth.controller";
+import { auditController } from "./modules/auth/audit.controller";
 import { videoController } from "./modules/video/video.controller";
 import { genreController } from "./modules/genre/genre.controller";
 import { meController } from "./modules/me/me.controller";
@@ -40,6 +41,7 @@ const app = new Elysia()
   })
   .use(healthController)
   .use(authController)
+  .use(auditController)
   .use(videoController)
   .use(genreController)
   .use(meController)

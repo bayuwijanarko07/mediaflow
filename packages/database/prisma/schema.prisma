@@ -21,6 +21,7 @@ model User {
   refreshTokens RefreshToken[]
   videos        Video[]         // BARU — video yang di-upload user ini (kalau admin)
   watchHistory  WatchHistory[]  // BARU — riwayat tontonan user ini
+  loginAuditLogs LoginAuditLog[]
 
   @@map("users")
 }
@@ -148,4 +149,20 @@ model WatchHistory {
 enum Role {
   USER
   ADMIN
+}
+
+model LoginAuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email     String
+  success   Boolean
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([createdAt])
+  @@map("login_audit_logs")
 }
