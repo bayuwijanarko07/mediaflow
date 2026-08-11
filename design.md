@@ -13,20 +13,129 @@ Publik (belum login)
 ├── /login                     — form masuk
 └── /register                  — form daftar
 
-Terproteksi — User biasa (role USER/ADMIN)
+Terproteksi — Member (role USER, halaman yang RELEVAN & DIMAKSUDKAN untuk mereka)
 ├── /                          — beranda: Continue Watching, Trending
 ├── /videos                    — katalog + search + filter genre
 └── /videos/[id]                — detail + player HLS
 
-Terproteksi — Admin only (role ADMIN, dicek di backend saat call API)
+Terproteksi — Admin only (role ADMIN)
 ├── /admin/upload               — form upload video baru (chunked)
 ├── /admin/videos                — dashboard: list semua video + status transcoding
+├── /admin/videos/[id]           — status ringkas 1 video (masih placeholder)
 └── /admin/videos/[id]/edit      — edit metadata (judul/deskripsi/genre)
 ```
 
-> Catatan: proteksi route di frontend (`ProtectedRoute`) hanya memastikan **sudah login**, bukan cek role. Halaman admin tetap bisa diakses secara URL oleh user biasa, tapi setiap action (upload/edit/delete) akan ditolak backend (`403 Forbidden` dari `requireAdmin`) — UI mengandalkan pesan error dari API, bukan menyembunyikan menu berdasarkan role. Ini konsisten dengan skala target (10-20 user dikenal via VPN), bukan celah keamanan karena enforcement sesungguhnya tetap di backend.
+> **Perbaikan route flow untuk member (sudah diimplementasikan):** Sebelumnya route member tercampur dengan admin di kategori "USER/ADMIN" yang sama, dan `ProtectedRoute` hanya mengecek **sudah login atau belum**, bukan role — member yang tahu/menebak URL `/admin/upload` bisa membuka & mengisi form admin, baru gagal saat submit (`403 Forbidden` dari `requireAdmin`).
+>
+> **Perbaikan:** komponen baru `RequireAdmin` (`app/components/auth/RequireAdmin.tsx`) menggantikan `ProtectedRoute` di keempat halaman `/admin/*`. Bedanya dengan `ProtectedRoute`:
+> - Belum login → tetap redirect ke `/login?redirect=<pathname>` (sama seperti sebelumnya).
+> - **Sudah login tapi `user.role !== "ADMIN"`** → langsung `router.replace("/")`, halaman admin tidak pernah ter-render sama sekali ke member (dicegah lewat kondisi render, bukan cuma `useEffect`, supaya tidak ada flash konten).
+> - Baru render `children` kalau `role === "ADMIN"`.
+>
+> Ini murni perbaikan navigasi/UX di frontend — **enforcement keamanan sesungguhnya tetap di `requireAdmin` middleware backend** (`apps/api`), yang tidak berubah. `RequireAdmin` hanya mencegah member "nyasar" mengisi form yang toh akan ditolak. File terkait: `RequireAdmin.tsx`, `RequireAdmin.test.tsx`, dan keempat halaman di bawah `apps/web/app/admin/` sudah diupdate untuk memakainya.
 
-### 1.2 Flow: Autentikasi
+### 1.2 Alur Rute End-to-End untuk Member (Perbaikan)
+
+Diagram berikut adalah **satu alur utuh** perjalanan seorang member, dari belum punya akun sampai menonton dan logout — menggantikan potongan-potongan flow yang sebelumnya terpisah tanpa gambaran keseluruhan.
+
+```
+                         ┌─────────────────────────┐
+                         │   Pengguna baru buka /   │
+                         └────────────┬────────────┘
+                                      │
+                     ProtectedRoute: isAuthenticated? ──── ya ──────────────┐
+                                      │ tidak                               │
+                                      ▼                                    │
+                    router.replace("/login?redirect=%2F")                  │
+                                      │                                    │
+                                      ▼                                    │
+                              ┌───────────────┐                            │
+                              │    /login     │◀── link "Belum punya akun?"│
+                              └───────┬───────┘         → /register        │
+                                      │                        │           │
+                     belum punya akun?│                        ▼           │
+                                      │              ┌───────────────────┐ │
+                                      │              │     /register     │ │
+                                      │              │ - email, password │ │
+                                      │              │ - (nama opsional) │ │
+                                      │              └─────────┬─────────┘ │
+                                      │                        │ sukses    │
+                                      │                        ▼           │
+                                      │◀───── router.push("/login") ───────┤
+                                      │        (TIDAK auto-login;          │
+                                      │         member harus login manual  │
+                                      │         setelah daftar)            │
+                                      ▼                                    │
+                       isi email + password → submit                      │
+                                      │                                    │
+                        ┌─────────────┴─────────────┐                     │
+                     gagal                        sukses                  │
+                        │                             │                    │
+              banner error merah,           accessToken (memory) +        │
+              tetap di /login               refresh_token (cookie) diset  │
+                                                       │                    │
+                              router.push(redirectParam ?? "/") ───────────┘
+                                                       │
+                                                       ▼
+                                          ┌─────────────────────────┐
+                                          │      "/" — Beranda      │
+                                          │  - Continue Watching     │
+                                          │  - Trending               │
+                                          │  - link "Lihat semua     │
+                                          │     video →" ke /videos  │
+                                          └────────────┬─────────────┘
+                                                       │
+                       ┌───────────────────────────────┼───────────────────────────────┐
+                       ▼                               ▼                               ▼
+             klik video di Continue          klik video di Trending           klik "Lihat semua video"
+             Watching (jump langsung                  │                               │
+             ke video itu)                             │                               ▼
+                       │                               │                     ┌───────────────────┐
+                       │                               │                     │      /videos       │
+                       │                               │                     │  search (debounce  │
+                       │                               │                     │  400ms) + filter    │
+                       │                               │                     │  genre + pagination │
+                       │                               │                     └──────────┬──────────┘
+                       │                               │                                │ klik VideoCard
+                       └───────────────┬───────────────┴────────────────────────────────┘
+                                       ▼
+                            ┌───────────────────────┐
+                            │    /videos/[id]         │
+                            │  - metadata video        │
+                            │  - init playback session  │
+                            │    (viewCount +1, sekali)  │
+                            │  - resume dari watch-       │
+                            │    history kalau ada         │
+                            │  - player HLS.js/native       │
+                            │  - kirim watch-progress         │
+                            │    tiap ~15 detik                │
+                            └────────────┬─────────────────────┘
+                                        │
+                     video selesai / user pindah halaman
+                                        │
+                                        ▼
+                          balik ke "/" → video ini kini
+                          muncul di Continue Watching (kalau
+                          belum ≥95% durasi) atau HILANG dari
+                          situ (kalau sudah dianggap completed)
+                                        │
+                                        ▼
+                              klik tombol Logout
+                                        │
+                                        ▼
+                    POST /auth/logout (best-effort, selalu lanjut)
+                                        │
+                                        ▼
+                        clear accessToken + user → router.push("/login")
+```
+
+**Titik-titik perbaikan yang ditambahkan pada alur ini dibanding sebelumnya:**
+1. **Redirect-back eksplisit digambar penuh** — kalau member mengetik langsung `/videos/[id]` tanpa login, `ProtectedRoute` menyimpan `redirect=%2Fvideos%2F<id>` di query `/login`, dan setelah login sukses `LoginForm` membaca `searchParams.get("redirect")` untuk balik ke halaman yang **benar-benar dituju**, bukan selalu ke `/`.
+2. **Register tidak auto-login** ditegaskan sebagai bagian dari alur (bukan detail tersembunyi) — member **wajib** login manual sekali setelah daftar; ini keputusan produk yang perlu terlihat jelas di dokumentasi flow supaya tidak dianggap bug saat QA.
+3. **Loop Continue Watching ↔ Detail Video** digambar sebagai siklus (nonton → balik ke beranda → video hilang/tetap muncul tergantung status `completed`), bukan flow satu arah — ini pola pemakaian yang sebenarnya paling sering dilakukan member.
+4. **Tidak ada jalur member menuju `/admin/*`** di diagram ini sama sekali — sesuai §1.1, ini memang bukan bagian dari perjalanan member yang valid.
+
+### 1.3 Flow: Autentikasi (Detail Per Langkah)
 
 ```
 [Landing "/"]
@@ -72,7 +181,7 @@ App mount → AuthProvider useEffect → POST /auth/refresh (pakai cookie)
         yang mengganggu (silent fail, user cukup lihat tombol "Masuk")
 ```
 
-### 1.3 Flow: Katalog & Pencarian Video
+### 1.4 Flow: Katalog & Pencarian Video
 
 ```
 [/videos]
@@ -97,7 +206,7 @@ App mount → AuthProvider useEffect → POST /auth/refresh (pakai cookie)
 
 Pagination: tombol "Sebelumnya"/"Berikutnya" di-disable otomatis di batas halaman pertama/terakhir; hanya muncul kalau `totalPages > 1`.
 
-### 1.4 Flow: Playback
+### 1.5 Flow: Playback
 
 ```
 [/videos/[id]]
@@ -123,7 +232,7 @@ Pagination: tombol "Sebelumnya"/"Berikutnya" di-disable otomatis di batas halama
      lainnya       → pesan generik, hls.destroy() (berhenti total)
 ```
 
-### 1.5 Flow: Upload Video (Admin)
+### 1.6 Flow: Upload Video (Admin)
 
 ```
 [/admin/upload]
@@ -155,7 +264,7 @@ Pagination: tombol "Sebelumnya"/"Berikutnya" di-disable otomatis di batas halama
                   supaya user sempat lihat konfirmasi)
 ```
 
-### 1.6 Flow: Dashboard Admin (Monitoring & Aksi)
+### 1.7 Flow: Dashboard Admin (Monitoring & Aksi)
 
 ```
 [/admin/videos]
@@ -176,7 +285,7 @@ Pagination: tombol "Sebelumnya"/"Berikutnya" di-disable otomatis di batas halama
               DELETE /videos/admin/:id → refetch list
 ```
 
-### 1.7 Flow: Logout
+### 1.8 Flow: Logout
 
 ```
 Klik tombol Logout → disable tombol (state "Keluar...")
@@ -352,5 +461,4 @@ Hapus video di dashboard admin memakai `window.confirm()` bawaan browser, bukan 
 
 - Belum ada dark mode aktif (variabel `--background`/`--foreground` untuk `prefers-color-scheme: dark` sudah didefinisikan di `globals.css`, tapi belum dipakai konsisten oleh komponen berwarna eksplisit seperti `bg-white`/`text-gray-800`).
 - Belum ada halaman 404/error kustom.
-- Belum ada indikator visual role (admin vs user) di navigasi — link ke halaman admin tidak disembunyikan dari user biasa di UI (lihat §1.1).
 - `/admin/videos/[id]/page.tsx` (halaman status video tunggal) masih placeholder statis (`"QUEUED"` hardcoded) — progress real-time untuk halaman ini belum diimplementasi, saat ini hanya tersedia di dashboard list (`/admin/videos`) lewat polling.

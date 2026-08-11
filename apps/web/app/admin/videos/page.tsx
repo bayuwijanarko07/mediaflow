@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ProtectedRoute } from "@/app/components/auth/ProtectedRoute";
+import { RequireAdmin } from "@/app/components/auth/RequireAdmin";
 import { StatusBadge } from "@/app/components/admin/StatusBadge";
 import { useAdminVideos } from "@/lib/hooks/useAdminVideos";
 import { api } from "@/lib/api-client";
@@ -45,7 +45,7 @@ export default function AdminVideosDashboardPage() {
   };
 
   return (
-    <ProtectedRoute>
+    <RequireAdmin>
       <main className="max-w-6xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Dashboard Admin — Video</h1>
@@ -109,7 +109,7 @@ export default function AdminVideosDashboardPage() {
           </div>
         )}
       </main>
-    </ProtectedRoute>
+    </RequireAdmin>
   );
 }
 

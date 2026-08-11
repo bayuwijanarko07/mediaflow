@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ProtectedRoute } from "@/app/components/auth/ProtectedRoute";
+import { RequireAdmin  } from "@/app/components/auth/RequireAdmin";
 import { apiFetch, api } from "@/lib/api-client";
 import type { Genre } from "@mediaflow/shared-types";
 
@@ -71,16 +71,16 @@ export default function EditVideoPage() {
 
   if (isLoading) {
     return (
-      <ProtectedRoute>
+      <RequireAdmin>
         <main className="max-w-xl mx-auto p-6">
           <p className="text-gray-500">Memuat...</p>
         </main>
-      </ProtectedRoute>
+      </RequireAdmin>
     );
   }
 
   return (
-    <ProtectedRoute>
+    <RequireAdmin>
       <main className="max-w-xl mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6">Edit Video</h1>
 
@@ -151,6 +151,6 @@ export default function EditVideoPage() {
           </div>
         </div>
       </main>
-    </ProtectedRoute>
+    </RequireAdmin>
   );
 }

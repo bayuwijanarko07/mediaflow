@@ -1,6 +1,6 @@
 "use client";
 
-import { ProtectedRoute } from "@/app/components/auth/ProtectedRoute";
+import { RequireAdmin } from "@/app/components/auth/RequireAdmin";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
@@ -22,7 +22,7 @@ export default function VideoStatusPage() {
   }, [videoId]);
 
   return (
-    <ProtectedRoute>
+    <RequireAdmin>
       <main style={{ padding: 24 }}>
         <h1>Status Video</h1>
         {video && (
@@ -36,6 +36,6 @@ export default function VideoStatusPage() {
           </div>
         )}
       </main>
-    </ProtectedRoute>
+    </RequireAdmin>
   );
 }
